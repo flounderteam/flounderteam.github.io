@@ -17,7 +17,7 @@ the research platform applications:
   into the Zipline data bundle.
 
 - **daily_load_pipeline.ipynb**: demonstrates the interface for loading and running the Zipline
-  pipeline 
+  pipeline. 
 
   
 

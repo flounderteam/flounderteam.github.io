@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Flounder Zipline-Sharadar Interface &mdash; fsharadar 0.2.0 documentation</title>
+  <title>Release History &mdash; fsharadar 0.2.0 documentation</title>
   
 
   
@@ -44,7 +44,8 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Platform Overview" href="intro.html" /> 
+    <link rel="next" title="Contact Us" href="contactus.html" />
+    <link rel="prev" title="Examples" href="examples.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -58,7 +59,7 @@
           
 
           
-            <a href="#" class="icon icon-home"> fsharadar
+            <a href="index.html" class="icon icon-home"> fsharadar
           
 
           
@@ -93,14 +94,18 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Platform Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ingest.html">Ingesting Sharadar Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="building.html">Building Pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="running.html">Running Pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="release-history.html">Release History</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#v0-2-0-2021-07-01">v0.2.0 (2021-07-01)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#initial-release-2021-06-01">Initial Release (2021-06-01)</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="contactus.html">Contact Us</a></li>
 </ul>
 
@@ -117,7 +122,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">fsharadar</a>
+          <a href="index.html">fsharadar</a>
         
       </nav>
 
@@ -148,15 +153,15 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Flounder Zipline-Sharadar Interface</li>
+      <li>Release History</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/release-history.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -169,25 +174,15 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="flounder-zipline-sharadar-interface">
-<h1>Flounder Zipline-Sharadar Interface<a class="headerlink" href="#flounder-zipline-sharadar-interface" title="Permalink to this headline">¶</a></h1>
-<p>The Flounder Zipline-Sharadar interface represents the Flounder extension
-of the <a class="reference external" href="https://github.com/quantopian/zipline">Zipline</a> quantitative research platform for ingesting and loading
-<a class="reference external" href="https://www.quandl.com/publishers/SHARADAR">Sharadar</a> data.</p>
-<p>The current version provides consolidated access to daily prices,
-fundamentals, and metadata of US stocks for selecting
-tradable universes and running multiple factors within the Zipline pipeline.</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Platform Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ingest.html">Ingesting Sharadar Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="building.html">Building Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running.html">Running Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="release-history.html">Release History</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contactus.html">Contact Us</a></li>
-</ul>
+  <div class="section" id="release-history">
+<h1>Release History<a class="headerlink" href="#release-history" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="v0-2-0-2021-07-01">
+<h2>v0.2.0 (2021-07-01)<a class="headerlink" href="#v0-2-0-2021-07-01" title="Permalink to this headline">¶</a></h2>
+<p>The ingest method of the fsharadar.sep module was updated to address
+the new version of the SHARADAR_SEP_2_&lt;&gt;.csv file.</p>
+</div>
+<div class="section" id="initial-release-2021-06-01">
+<h2>Initial Release (2021-06-01)<a class="headerlink" href="#initial-release-2021-06-01" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -197,7 +192,8 @@ tradable universes and running multiple factors within the Zipline pipeline.</p>
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="intro.html" class="btn btn-neutral float-right" title="Platform Overview" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="contactus.html" class="btn btn-neutral float-right" title="Contact Us" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="examples.html" class="btn btn-neutral float-left" title="Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
