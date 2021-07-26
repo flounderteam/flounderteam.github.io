@@ -1,0 +1,777 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>zipline.pipeline.factors.basic &mdash; Zipline 1.4.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Zipline
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../beginner-tutorial.html">Zipline Beginner Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bundles.html">Data Bundles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../trading-calendars.html">Trading Calendars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../risk-and-perf-metrics.html">Risk and Performance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development-guidelines.html">Development Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../appendix.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release-process.html">Release Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../releases.html">Release Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Zipline</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>zipline.pipeline.factors.basic</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for zipline.pipeline.factors.basic</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Simple common factors.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">arange</span><span class="p">,</span>
+    <span class="n">average</span><span class="p">,</span>
+    <span class="n">clip</span><span class="p">,</span>
+    <span class="n">copyto</span><span class="p">,</span>
+    <span class="n">exp</span><span class="p">,</span>
+    <span class="n">fmax</span><span class="p">,</span>
+    <span class="n">full</span><span class="p">,</span>
+    <span class="n">isnan</span><span class="p">,</span>
+    <span class="n">log</span><span class="p">,</span>
+    <span class="n">NINF</span><span class="p">,</span>
+    <span class="n">sqrt</span><span class="p">,</span>
+    <span class="nb">sum</span> <span class="k">as</span> <span class="n">np_sum</span><span class="p">,</span>
+    <span class="n">unique</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">zipline.pipeline.data</span> <span class="kn">import</span> <span class="n">EquityPricing</span>
+<span class="kn">from</span> <span class="nn">zipline.utils.input_validation</span> <span class="kn">import</span> <span class="n">expect_types</span>
+<span class="kn">from</span> <span class="nn">zipline.utils.math_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">nanargmax</span><span class="p">,</span>
+    <span class="n">nanmax</span><span class="p">,</span>
+    <span class="n">nanmean</span><span class="p">,</span>
+    <span class="n">nanstd</span><span class="p">,</span>
+    <span class="n">nansum</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">zipline.utils.numpy_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">float64_dtype</span><span class="p">,</span>
+    <span class="n">ignore_nanwarnings</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.factor</span> <span class="kn">import</span> <span class="n">CustomFactor</span>
+<span class="kn">from</span> <span class="nn">..mixins</span> <span class="kn">import</span> <span class="n">SingleInputMixin</span>
+
+
+<div class="viewcode-block" id="Returns"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.Returns">[docs]</a><span class="k">class</span> <span class="nc">Returns</span><span class="p">(</span><span class="n">CustomFactor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the percent change in close price over the given window_length.</span>
+
+<span class="sd">    **Default Inputs**: [EquityPricing.close]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">EquityPricing</span><span class="o">.</span><span class="n">close</span><span class="p">]</span>
+    <span class="n">window_safe</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Returns</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_validate</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_length</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;Returns&#39; expected a window length of at least 2, but was &quot;</span>
+                <span class="s2">&quot;given </span><span class="si">{window_length}</span><span class="s2">. For daily returns, use a window &quot;</span>
+                <span class="s2">&quot;length of 2.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">window_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_length</span><span class="p">)</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="Returns.compute"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.Returns.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">today</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">close</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">close</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">close</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">close</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div></div>
+
+
+<div class="viewcode-block" id="PercentChange"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.PercentChange">[docs]</a><span class="k">class</span> <span class="nc">PercentChange</span><span class="p">(</span><span class="n">SingleInputMixin</span><span class="p">,</span> <span class="n">CustomFactor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the percent change over the given window_length.</span>
+
+<span class="sd">    **Default Inputs:** None</span>
+
+<span class="sd">    **Default Window Length:** None</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Percent change is calculated as ``(new - old) / abs(old)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">window_safe</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PercentChange</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_validate</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_length</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;PercentChange&#39; expected a window length&quot;</span>
+                <span class="s2">&quot;of at least 2, but was given </span><span class="si">{window_length}</span><span class="s2">. &quot;</span>
+                <span class="s2">&quot;For daily percent change, use a window &quot;</span>
+                <span class="s2">&quot;length of 2.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">window_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_length</span><span class="p">)</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="PercentChange.compute"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.PercentChange.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">today</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div></div>
+
+
+<div class="viewcode-block" id="DailyReturns"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.DailyReturns">[docs]</a><span class="k">class</span> <span class="nc">DailyReturns</span><span class="p">(</span><span class="n">Returns</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates daily percent change in close price.</span>
+
+<span class="sd">    **Default Inputs**: [EquityPricing.close]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">EquityPricing</span><span class="o">.</span><span class="n">close</span><span class="p">]</span>
+    <span class="n">window_safe</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">window_length</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+<div class="viewcode-block" id="SimpleMovingAverage"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.SimpleMovingAverage">[docs]</a><span class="k">class</span> <span class="nc">SimpleMovingAverage</span><span class="p">(</span><span class="n">SingleInputMixin</span><span class="p">,</span> <span class="n">CustomFactor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Average Value of an arbitrary column</span>
+
+<span class="sd">    **Default Inputs**: None</span>
+
+<span class="sd">    **Default Window Length**: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># numpy&#39;s nan functions throw warnings when passed an array containing only</span>
+    <span class="c1"># nans, but they still returns the desired value (nan), so we ignore the</span>
+    <span class="c1"># warning.</span>
+    <span class="n">ctx</span> <span class="o">=</span> <span class="n">ignore_nanwarnings</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SimpleMovingAverage.compute"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.SimpleMovingAverage.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">today</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">nanmean</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="WeightedAverageValue"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.WeightedAverageValue">[docs]</a><span class="k">class</span> <span class="nc">WeightedAverageValue</span><span class="p">(</span><span class="n">CustomFactor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper for VWAP-like computations.</span>
+
+<span class="sd">    **Default Inputs:** None</span>
+
+<span class="sd">    **Default Window Length:** None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="WeightedAverageValue.compute"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.WeightedAverageValue.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">today</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">nansum</span><span class="p">(</span><span class="n">base</span> <span class="o">*</span> <span class="n">weight</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">nansum</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="VWAP"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.VWAP">[docs]</a><span class="k">class</span> <span class="nc">VWAP</span><span class="p">(</span><span class="n">WeightedAverageValue</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Volume Weighted Average Price</span>
+
+<span class="sd">    **Default Inputs:** [EquityPricing.close, EquityPricing.volume]</span>
+
+<span class="sd">    **Default Window Length:** None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">(</span><span class="n">EquityPricing</span><span class="o">.</span><span class="n">close</span><span class="p">,</span> <span class="n">EquityPricing</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MaxDrawdown"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.MaxDrawdown">[docs]</a><span class="k">class</span> <span class="nc">MaxDrawdown</span><span class="p">(</span><span class="n">SingleInputMixin</span><span class="p">,</span> <span class="n">CustomFactor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Max Drawdown</span>
+
+<span class="sd">    **Default Inputs:** None</span>
+
+<span class="sd">    **Default Window Length:** None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ctx</span> <span class="o">=</span> <span class="n">ignore_nanwarnings</span><span class="p">()</span>
+
+<div class="viewcode-block" id="MaxDrawdown.compute"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.MaxDrawdown.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">today</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="n">drawdowns</span> <span class="o">=</span> <span class="n">fmax</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">data</span>
+        <span class="n">drawdowns</span><span class="p">[</span><span class="n">isnan</span><span class="p">(</span><span class="n">drawdowns</span><span class="p">)]</span> <span class="o">=</span> <span class="n">NINF</span>
+        <span class="n">drawdown_ends</span> <span class="o">=</span> <span class="n">nanargmax</span><span class="p">(</span><span class="n">drawdowns</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># TODO: Accelerate this loop in Cython or Numba.</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">drawdown_ends</span><span class="p">):</span>
+            <span class="n">peak</span> <span class="o">=</span> <span class="n">nanmax</span><span class="p">(</span><span class="n">data</span><span class="p">[:</span><span class="n">end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">peak</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="n">end</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span> <span class="o">/</span> <span class="n">data</span><span class="p">[</span><span class="n">end</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span></div></div>
+
+
+<div class="viewcode-block" id="AverageDollarVolume"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.AverageDollarVolume">[docs]</a><span class="k">class</span> <span class="nc">AverageDollarVolume</span><span class="p">(</span><span class="n">CustomFactor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Average Daily Dollar Volume</span>
+
+<span class="sd">    **Default Inputs:** [EquityPricing.close, EquityPricing.volume]</span>
+
+<span class="sd">    **Default Window Length:** None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">EquityPricing</span><span class="o">.</span><span class="n">close</span><span class="p">,</span> <span class="n">EquityPricing</span><span class="o">.</span><span class="n">volume</span><span class="p">]</span>
+
+<div class="viewcode-block" id="AverageDollarVolume.compute"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.AverageDollarVolume.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">today</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">close</span><span class="p">,</span> <span class="n">volume</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">nansum</span><span class="p">(</span><span class="n">close</span> <span class="o">*</span> <span class="n">volume</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">close</span><span class="p">)</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">exponential_weights</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">decay_rate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build a weight vector for an exponentially-weighted statistic.</span>
+
+<span class="sd">    The resulting ndarray is of the form::</span>
+
+<span class="sd">        [decay_rate ** length, ..., decay_rate ** 2, decay_rate]</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    length : int</span>
+<span class="sd">        The length of the desired weight vector.</span>
+<span class="sd">    decay_rate : float</span>
+<span class="sd">        The rate at which entries in the weight vector increase or decrease.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    weights : ndarray[float64]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">full</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">decay_rate</span><span class="p">,</span> <span class="n">float64_dtype</span><span class="p">)</span> <span class="o">**</span> <span class="n">arange</span><span class="p">(</span><span class="n">length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_ExponentialWeightedFactor</span><span class="p">(</span><span class="n">SingleInputMixin</span><span class="p">,</span> <span class="n">CustomFactor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for factors implementing exponential-weighted operations.</span>
+
+<span class="sd">    **Default Inputs:** None</span>
+
+<span class="sd">    **Default Window Length:** None</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    inputs : length-1 list or tuple of BoundColumn</span>
+<span class="sd">        The expression over which to compute the average.</span>
+<span class="sd">    window_length : int &gt; 0</span>
+<span class="sd">        Length of the lookback window over which to compute the average.</span>
+<span class="sd">    decay_rate : float, 0 &lt; decay_rate &lt;= 1</span>
+<span class="sd">        Weighting factor by which to discount past observations.</span>
+
+<span class="sd">        When calculating historical averages, rows are multiplied by the</span>
+<span class="sd">        sequence::</span>
+
+<span class="sd">            decay_rate, decay_rate ** 2, decay_rate ** 3, ...</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    weights</span>
+<span class="sd">    from_span</span>
+<span class="sd">    from_halflife</span>
+<span class="sd">    from_center_of_mass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;decay_rate&#39;</span><span class="p">,)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="nd">@expect_types</span><span class="p">(</span><span class="n">span</span><span class="o">=</span><span class="n">Number</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">from_span</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">window_length</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convenience constructor for passing `decay_rate` in terms of `span`.</span>
+
+<span class="sd">        Forwards `decay_rate` as `1 - (2.0 / (1 + span))`.  This provides the</span>
+<span class="sd">        behavior equivalent to passing `span` to pandas.ewma.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            # Equivalent to:</span>
+<span class="sd">            # my_ewma = EWMA(</span>
+<span class="sd">            #    inputs=[EquityPricing.close],</span>
+<span class="sd">            #    window_length=30,</span>
+<span class="sd">            #    decay_rate=(1 - (2.0 / (1 + 15.0))),</span>
+<span class="sd">            # )</span>
+<span class="sd">            my_ewma = EWMA.from_span(</span>
+<span class="sd">                inputs=[EquityPricing.close],</span>
+<span class="sd">                window_length=30,</span>
+<span class="sd">                span=15,</span>
+<span class="sd">            )</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This classmethod is provided by both</span>
+<span class="sd">        :class:`ExponentialWeightedMovingAverage` and</span>
+<span class="sd">        :class:`ExponentialWeightedMovingStdDev`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">span</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;`span` must be a positive number. </span><span class="si">%s</span><span class="s2"> was passed.&quot;</span> <span class="o">%</span> <span class="n">span</span>
+            <span class="p">)</span>
+
+        <span class="n">decay_rate</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">span</span><span class="p">)))</span>
+        <span class="k">assert</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">decay_rate</span> <span class="o">&lt;=</span> <span class="mf">1.0</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+            <span class="n">window_length</span><span class="o">=</span><span class="n">window_length</span><span class="p">,</span>
+            <span class="n">decay_rate</span><span class="o">=</span><span class="n">decay_rate</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="nd">@expect_types</span><span class="p">(</span><span class="n">halflife</span><span class="o">=</span><span class="n">Number</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">from_halflife</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">window_length</span><span class="p">,</span> <span class="n">halflife</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convenience constructor for passing ``decay_rate`` in terms of half</span>
+<span class="sd">        life.</span>
+
+<span class="sd">        Forwards ``decay_rate`` as ``exp(log(.5) / halflife)``.  This provides</span>
+<span class="sd">        the behavior equivalent to passing `halflife` to pandas.ewma.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            # Equivalent to:</span>
+<span class="sd">            # my_ewma = EWMA(</span>
+<span class="sd">            #    inputs=[EquityPricing.close],</span>
+<span class="sd">            #    window_length=30,</span>
+<span class="sd">            #    decay_rate=np.exp(np.log(0.5) / 15),</span>
+<span class="sd">            # )</span>
+<span class="sd">            my_ewma = EWMA.from_halflife(</span>
+<span class="sd">                inputs=[EquityPricing.close],</span>
+<span class="sd">                window_length=30,</span>
+<span class="sd">                halflife=15,</span>
+<span class="sd">            )</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This classmethod is provided by both</span>
+<span class="sd">        :class:`ExponentialWeightedMovingAverage` and</span>
+<span class="sd">        :class:`ExponentialWeightedMovingStdDev`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">halflife</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;`span` must be a positive number. </span><span class="si">%s</span><span class="s2"> was passed.&quot;</span> <span class="o">%</span> <span class="n">halflife</span>
+            <span class="p">)</span>
+        <span class="n">decay_rate</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="mf">.5</span><span class="p">)</span> <span class="o">/</span> <span class="n">halflife</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">decay_rate</span> <span class="o">&lt;=</span> <span class="mf">1.0</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+            <span class="n">window_length</span><span class="o">=</span><span class="n">window_length</span><span class="p">,</span>
+            <span class="n">decay_rate</span><span class="o">=</span><span class="n">decay_rate</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_center_of_mass</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+                            <span class="n">inputs</span><span class="p">,</span>
+                            <span class="n">window_length</span><span class="p">,</span>
+                            <span class="n">center_of_mass</span><span class="p">,</span>
+                            <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convenience constructor for passing `decay_rate` in terms of center of</span>
+<span class="sd">        mass.</span>
+
+<span class="sd">        Forwards `decay_rate` as `1 - (1 / 1 + center_of_mass)`.  This provides</span>
+<span class="sd">        behavior equivalent to passing `center_of_mass` to pandas.ewma.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            # Equivalent to:</span>
+<span class="sd">            # my_ewma = EWMA(</span>
+<span class="sd">            #    inputs=[EquityPricing.close],</span>
+<span class="sd">            #    window_length=30,</span>
+<span class="sd">            #    decay_rate=(1 - (1 / 15.0)),</span>
+<span class="sd">            # )</span>
+<span class="sd">            my_ewma = EWMA.from_center_of_mass(</span>
+<span class="sd">                inputs=[EquityPricing.close],</span>
+<span class="sd">                window_length=30,</span>
+<span class="sd">                center_of_mass=15,</span>
+<span class="sd">            )</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This classmethod is provided by both</span>
+<span class="sd">        :class:`ExponentialWeightedMovingAverage` and</span>
+<span class="sd">        :class:`ExponentialWeightedMovingStdDev`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+            <span class="n">window_length</span><span class="o">=</span><span class="n">window_length</span><span class="p">,</span>
+            <span class="n">decay_rate</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">center_of_mass</span><span class="p">))),</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="ExponentialWeightedMovingAverage"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.ExponentialWeightedMovingAverage">[docs]</a><span class="k">class</span> <span class="nc">ExponentialWeightedMovingAverage</span><span class="p">(</span><span class="n">_ExponentialWeightedFactor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exponentially Weighted Moving Average</span>
+
+<span class="sd">    **Default Inputs:** None</span>
+
+<span class="sd">    **Default Window Length:** None</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    inputs : length-1 list/tuple of BoundColumn</span>
+<span class="sd">        The expression over which to compute the average.</span>
+<span class="sd">    window_length : int &gt; 0</span>
+<span class="sd">        Length of the lookback window over which to compute the average.</span>
+<span class="sd">    decay_rate : float, 0 &lt; decay_rate &lt;= 1</span>
+<span class="sd">        Weighting factor by which to discount past observations.</span>
+
+<span class="sd">        When calculating historical averages, rows are multiplied by the</span>
+<span class="sd">        sequence::</span>
+
+<span class="sd">            decay_rate, decay_rate ** 2, decay_rate ** 3, ...</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - This class can also be imported under the name ``EWMA``.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    :meth:`pandas.DataFrame.ewm`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ExponentialWeightedMovingAverage.compute"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.ExponentialWeightedMovingAverage.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">today</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">decay_rate</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">average</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">weights</span><span class="o">=</span><span class="n">exponential_weights</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">decay_rate</span><span class="p">),</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ExponentialWeightedMovingStdDev"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.ExponentialWeightedMovingStdDev">[docs]</a><span class="k">class</span> <span class="nc">ExponentialWeightedMovingStdDev</span><span class="p">(</span><span class="n">_ExponentialWeightedFactor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exponentially Weighted Moving Standard Deviation</span>
+
+<span class="sd">    **Default Inputs:** None</span>
+
+<span class="sd">    **Default Window Length:** None</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    inputs : length-1 list/tuple of BoundColumn</span>
+<span class="sd">        The expression over which to compute the average.</span>
+<span class="sd">    window_length : int &gt; 0</span>
+<span class="sd">        Length of the lookback window over which to compute the average.</span>
+<span class="sd">    decay_rate : float, 0 &lt; decay_rate &lt;= 1</span>
+<span class="sd">        Weighting factor by which to discount past observations.</span>
+
+<span class="sd">        When calculating historical averages, rows are multiplied by the</span>
+<span class="sd">        sequence::</span>
+
+<span class="sd">            decay_rate, decay_rate ** 2, decay_rate ** 3, ...</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - This class can also be imported under the name ``EWMSTD``.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    :func:`pandas.DataFrame.ewm`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ExponentialWeightedMovingStdDev.compute"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.ExponentialWeightedMovingStdDev.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">today</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">decay_rate</span><span class="p">):</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">exponential_weights</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">decay_rate</span><span class="p">)</span>
+
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">average</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+        <span class="n">variance</span> <span class="o">=</span> <span class="n">average</span><span class="p">((</span><span class="n">data</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+
+        <span class="n">squared_weight_sum</span> <span class="o">=</span> <span class="p">(</span><span class="n">np_sum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">bias_correction</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">squared_weight_sum</span> <span class="o">/</span> <span class="p">(</span><span class="n">squared_weight_sum</span> <span class="o">-</span> <span class="n">np_sum</span><span class="p">(</span><span class="n">weights</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">variance</span> <span class="o">*</span> <span class="n">bias_correction</span><span class="p">)</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">LinearWeightedMovingAverage</span><span class="p">(</span><span class="n">SingleInputMixin</span><span class="p">,</span> <span class="n">CustomFactor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Weighted Average Value of an arbitrary column</span>
+
+<span class="sd">    **Default Inputs**: None</span>
+
+<span class="sd">    **Default Window Length**: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># numpy&#39;s nan functions throw warnings when passed an array containing only</span>
+    <span class="c1"># nans, but they still returns the desired value (nan), so we ignore the</span>
+    <span class="c1"># warning.</span>
+    <span class="n">ctx</span> <span class="o">=</span> <span class="n">ignore_nanwarnings</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">today</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="n">ndays</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Initialize weights array</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndays</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float64_dtype</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">ndays</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Compute normalizer</span>
+        <span class="n">normalizer</span> <span class="o">=</span> <span class="p">(</span><span class="n">ndays</span> <span class="o">*</span> <span class="p">(</span><span class="n">ndays</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span>
+
+        <span class="c1"># Weight the data</span>
+        <span class="n">weighted_data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">*</span> <span class="n">weights</span>
+
+        <span class="c1"># Compute weighted averages</span>
+        <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">nansum</span><span class="p">(</span><span class="n">weighted_data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">normalizer</span>
+
+
+<span class="k">class</span> <span class="nc">AnnualizedVolatility</span><span class="p">(</span><span class="n">CustomFactor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Volatility. The degree of variation of a series over time as measured by</span>
+<span class="sd">    the standard deviation of daily returns.</span>
+<span class="sd">    https://en.wikipedia.org/wiki/Volatility_(finance)</span>
+
+<span class="sd">    **Default Inputs:** [Returns(window_length=2)]</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    annualization_factor : float, optional</span>
+<span class="sd">        The number of time units per year. Defaults is 252, the number of NYSE</span>
+<span class="sd">        trading days in a normal year.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Returns</span><span class="p">(</span><span class="n">window_length</span><span class="o">=</span><span class="mi">2</span><span class="p">)]</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;annualization_factor&#39;</span><span class="p">:</span> <span class="mf">252.0</span><span class="p">}</span>
+    <span class="n">window_length</span> <span class="o">=</span> <span class="mi">252</span>
+
+    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">today</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">returns</span><span class="p">,</span> <span class="n">annualization_factor</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">nanstd</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">annualization_factor</span> <span class="o">**</span> <span class="mf">.5</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="PeerCount"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.PeerCount">[docs]</a><span class="k">class</span> <span class="nc">PeerCount</span><span class="p">(</span><span class="n">SingleInputMixin</span><span class="p">,</span> <span class="n">CustomFactor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Peer Count of distinct categories in a given classifier.  This factor</span>
+<span class="sd">    is returned by the classifier instance method peer_count()</span>
+
+<span class="sd">    **Default Inputs:** None</span>
+
+<span class="sd">    **Default Window Length:** 1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">window_length</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PeerCount</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_validate</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_length</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;PeerCount&#39; expected a window length of 1, but was given&quot;</span>
+                <span class="s2">&quot;</span><span class="si">{window_length}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">window_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_length</span><span class="p">)</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="PeerCount.compute"><a class="viewcode-back" href="../../../../appendix.html#zipline.pipeline.factors.PeerCount.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">today</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">classifier_values</span><span class="p">):</span>
+        <span class="c1"># Convert classifier array to group label int array</span>
+        <span class="n">group_labels</span><span class="p">,</span> <span class="n">null_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_to_integral</span><span class="p">(</span>
+            <span class="n">classifier_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">inverse</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">unique</span><span class="p">(</span>  <span class="c1"># Get counts, idx of unique groups</span>
+            <span class="n">group_labels</span><span class="p">,</span>
+            <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">copyto</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">counts</span><span class="p">[</span><span class="n">inverse</span><span class="p">],</span> <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="n">group_labels</span> <span class="o">!=</span> <span class="n">null_label</span><span class="p">))</span></div></div>
+
+
+<span class="c1"># Convenience aliases</span>
+<span class="n">EWMA</span> <span class="o">=</span> <span class="n">ExponentialWeightedMovingAverage</span>
+<span class="n">EWMSTD</span> <span class="o">=</span> <span class="n">ExponentialWeightedMovingStdDev</span>
+
+
+<span class="k">class</span> <span class="nc">Clip</span><span class="p">(</span><span class="n">CustomFactor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Clip (limit) the values in a factor.</span>
+
+<span class="sd">    Given an interval, values outside the interval are clipped to the interval</span>
+<span class="sd">    edges. For example, if an interval of ``[0, 1]`` is specified, values</span>
+<span class="sd">    smaller than 0 become 0, and values larger than 1 become 1.</span>
+
+<span class="sd">    **Default Window Length:** 1</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    min_bound : float</span>
+<span class="sd">        The minimum value to use.</span>
+<span class="sd">    max_bound : float</span>
+<span class="sd">        The maximum value to use.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    To only clip values on one side, ``-np.inf` and ``np.inf`` may be passed.</span>
+<span class="sd">    For example, to only clip the maximum value but not clip a minimum value:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">       Clip(inputs=[factor], min_bound=-np.inf, max_bound=user_provided_max)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    numpy.clip</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">window_length</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;min_bound&#39;</span><span class="p">,</span> <span class="s1">&#39;max_bound&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">today</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">min_bound</span><span class="p">,</span> <span class="n">max_bound</span><span class="p">):</span>
+        <span class="n">clip</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">min_bound</span><span class="p">,</span> <span class="n">max_bound</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2020, Quantopian Inc..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

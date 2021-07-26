@@ -1,0 +1,439 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>zipline.finance.execution &mdash; Zipline 1.4.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Zipline
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../beginner-tutorial.html">Zipline Beginner Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bundles.html">Data Bundles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../trading-calendars.html">Trading Calendars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../risk-and-perf-metrics.html">Risk and Performance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development-guidelines.html">Development Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../appendix.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release-process.html">Release Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../releases.html">Release Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Zipline</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>zipline.finance.execution</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for zipline.finance.execution</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright 2014 Quantopian, Inc.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">float_info</span>
+<span class="kn">from</span> <span class="nn">six</span> <span class="kn">import</span> <span class="n">with_metaclass</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">isfinite</span>
+<span class="kn">import</span> <span class="nn">zipline.utils.math_utils</span> <span class="k">as</span> <span class="nn">zp_math</span>
+<span class="kn">from</span> <span class="nn">zipline.errors</span> <span class="kn">import</span> <span class="n">BadOrderParameters</span>
+<span class="kn">from</span> <span class="nn">zipline.utils.compat</span> <span class="kn">import</span> <span class="n">consistent_round</span>
+
+
+<div class="viewcode-block" id="ExecutionStyle"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.execution.ExecutionStyle">[docs]</a><span class="k">class</span> <span class="nc">ExecutionStyle</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for order execution styles.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_exchange</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="ExecutionStyle.get_limit_price"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.execution.ExecutionStyle.get_limit_price">[docs]</a>    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_limit_price</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_buy</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the limit price for this order.</span>
+<span class="sd">        Returns either None or a numerical value &gt;= 0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="ExecutionStyle.get_stop_price"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.execution.ExecutionStyle.get_stop_price">[docs]</a>    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_stop_price</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_buy</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the stop price for this order.</span>
+<span class="sd">        Returns either None or a numerical value &gt;= 0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exchange</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The exchange to which this order should be routed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exchange</span></div>
+
+
+<div class="viewcode-block" id="MarketOrder"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.execution.MarketOrder">[docs]</a><span class="k">class</span> <span class="nc">MarketOrder</span><span class="p">(</span><span class="n">ExecutionStyle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Execution style for orders to be filled at current market price.</span>
+
+<span class="sd">    This is the default for orders placed with :func:`~zipline.api.order`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exchange</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exchange</span> <span class="o">=</span> <span class="n">exchange</span>
+
+    <span class="k">def</span> <span class="nf">get_limit_price</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_is_buy</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">get_stop_price</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_is_buy</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="LimitOrder"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.execution.LimitOrder">[docs]</a><span class="k">class</span> <span class="nc">LimitOrder</span><span class="p">(</span><span class="n">ExecutionStyle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Execution style for orders to be filled at a price equal to or better than</span>
+<span class="sd">    a specified limit price.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    limit_price : float</span>
+<span class="sd">        Maximum price for buys, or minimum price for sells, at which the order</span>
+<span class="sd">        should be filled.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">limit_price</span><span class="p">,</span> <span class="n">asset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">exchange</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">check_stoplimit_prices</span><span class="p">(</span><span class="n">limit_price</span><span class="p">,</span> <span class="s1">&#39;limit&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">limit_price</span> <span class="o">=</span> <span class="n">limit_price</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exchange</span> <span class="o">=</span> <span class="n">exchange</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">asset</span> <span class="o">=</span> <span class="n">asset</span>
+
+    <span class="k">def</span> <span class="nf">get_limit_price</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_buy</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">asymmetric_round_price</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">limit_price</span><span class="p">,</span>
+            <span class="n">is_buy</span><span class="p">,</span>
+            <span class="n">tick_size</span><span class="o">=</span><span class="p">(</span><span class="mf">0.01</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset</span><span class="o">.</span><span class="n">tick_size</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_stop_price</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_is_buy</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="StopOrder"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.execution.StopOrder">[docs]</a><span class="k">class</span> <span class="nc">StopOrder</span><span class="p">(</span><span class="n">ExecutionStyle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Execution style representing a market order to be placed if market price</span>
+<span class="sd">    reaches a threshold.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    stop_price : float</span>
+<span class="sd">        Price threshold at which the order should be placed. For sells, the</span>
+<span class="sd">        order will be placed if market price falls below this value. For buys,</span>
+<span class="sd">        the order will be placed if market price rises above this value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stop_price</span><span class="p">,</span> <span class="n">asset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">exchange</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">check_stoplimit_prices</span><span class="p">(</span><span class="n">stop_price</span><span class="p">,</span> <span class="s1">&#39;stop&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop_price</span> <span class="o">=</span> <span class="n">stop_price</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exchange</span> <span class="o">=</span> <span class="n">exchange</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">asset</span> <span class="o">=</span> <span class="n">asset</span>
+
+    <span class="k">def</span> <span class="nf">get_limit_price</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_is_buy</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">get_stop_price</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_buy</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">asymmetric_round_price</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop_price</span><span class="p">,</span>
+            <span class="ow">not</span> <span class="n">is_buy</span><span class="p">,</span>
+            <span class="n">tick_size</span><span class="o">=</span><span class="p">(</span><span class="mf">0.01</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset</span><span class="o">.</span><span class="n">tick_size</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="StopLimitOrder"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.execution.StopLimitOrder">[docs]</a><span class="k">class</span> <span class="nc">StopLimitOrder</span><span class="p">(</span><span class="n">ExecutionStyle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Execution style representing a limit order to be placed if market price</span>
+<span class="sd">    reaches a threshold.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    limit_price : float</span>
+<span class="sd">        Maximum price for buys, or minimum price for sells, at which the order</span>
+<span class="sd">        should be filled, if placed.</span>
+<span class="sd">    stop_price : float</span>
+<span class="sd">        Price threshold at which the order should be placed. For sells, the</span>
+<span class="sd">        order will be placed if market price falls below this value. For buys,</span>
+<span class="sd">        the order will be placed if market price rises above this value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">limit_price</span><span class="p">,</span> <span class="n">stop_price</span><span class="p">,</span> <span class="n">asset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">exchange</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">check_stoplimit_prices</span><span class="p">(</span><span class="n">limit_price</span><span class="p">,</span> <span class="s1">&#39;limit&#39;</span><span class="p">)</span>
+        <span class="n">check_stoplimit_prices</span><span class="p">(</span><span class="n">stop_price</span><span class="p">,</span> <span class="s1">&#39;stop&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">limit_price</span> <span class="o">=</span> <span class="n">limit_price</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop_price</span> <span class="o">=</span> <span class="n">stop_price</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exchange</span> <span class="o">=</span> <span class="n">exchange</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">asset</span> <span class="o">=</span> <span class="n">asset</span>
+
+    <span class="k">def</span> <span class="nf">get_limit_price</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_buy</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">asymmetric_round_price</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">limit_price</span><span class="p">,</span>
+            <span class="n">is_buy</span><span class="p">,</span>
+            <span class="n">tick_size</span><span class="o">=</span><span class="p">(</span><span class="mf">0.01</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset</span><span class="o">.</span><span class="n">tick_size</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_stop_price</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_buy</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">asymmetric_round_price</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop_price</span><span class="p">,</span>
+            <span class="ow">not</span> <span class="n">is_buy</span><span class="p">,</span>
+            <span class="n">tick_size</span><span class="o">=</span><span class="p">(</span><span class="mf">0.01</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset</span><span class="o">.</span><span class="n">tick_size</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">asymmetric_round_price</span><span class="p">(</span><span class="n">price</span><span class="p">,</span> <span class="n">prefer_round_down</span><span class="p">,</span> <span class="n">tick_size</span><span class="p">,</span> <span class="n">diff</span><span class="o">=</span><span class="mf">0.95</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Asymmetric rounding function for adjusting prices to the specified number</span>
+<span class="sd">    of places in a way that &quot;improves&quot; the price. For limit prices, this means</span>
+<span class="sd">    preferring to round down on buys and preferring to round up on sells.</span>
+<span class="sd">    For stop prices, it means the reverse.</span>
+
+<span class="sd">    If prefer_round_down == True:</span>
+<span class="sd">        When .05 below to .95 above a specified decimal place, use it.</span>
+<span class="sd">    If prefer_round_down == False:</span>
+<span class="sd">        When .95 below to .05 above a specified decimal place, use it.</span>
+
+<span class="sd">    In math-speak:</span>
+<span class="sd">    If prefer_round_down: [&lt;X-1&gt;.0095, X.0195) -&gt; round to X.01.</span>
+<span class="sd">    If not prefer_round_down: (&lt;X-1&gt;.0005, X.0105] -&gt; round to X.01.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">precision</span> <span class="o">=</span> <span class="n">zp_math</span><span class="o">.</span><span class="n">number_of_decimal_places</span><span class="p">(</span><span class="n">tick_size</span><span class="p">)</span>
+    <span class="n">multiplier</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">tick_size</span> <span class="o">*</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="n">precision</span><span class="p">))</span>
+    <span class="n">diff</span> <span class="o">-=</span> <span class="mf">0.5</span>  <span class="c1"># shift the difference down</span>
+    <span class="n">diff</span> <span class="o">*=</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="n">precision</span><span class="p">)</span>  <span class="c1"># adjust diff to precision of tick size</span>
+    <span class="n">diff</span> <span class="o">*=</span> <span class="n">multiplier</span>  <span class="c1"># adjust diff to value of tick_size</span>
+
+    <span class="c1"># Subtracting an epsilon from diff to enforce the open-ness of the upper</span>
+    <span class="c1"># bound on buys and the lower bound on sells.  Using the actual system</span>
+    <span class="c1"># epsilon doesn&#39;t quite get there, so use a slightly less epsilon-ey value.</span>
+    <span class="n">epsilon</span> <span class="o">=</span> <span class="n">float_info</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">*</span> <span class="mi">10</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">diff</span> <span class="o">-</span> <span class="n">epsilon</span>
+
+    <span class="c1"># relies on rounding half away from zero, unlike numpy&#39;s bankers&#39; rounding</span>
+    <span class="n">rounded</span> <span class="o">=</span> <span class="n">tick_size</span> <span class="o">*</span> <span class="n">consistent_round</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">price</span> <span class="o">-</span> <span class="p">(</span><span class="n">diff</span> <span class="k">if</span> <span class="n">prefer_round_down</span> <span class="k">else</span> <span class="o">-</span><span class="n">diff</span><span class="p">))</span> <span class="o">/</span> <span class="n">tick_size</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">zp_math</span><span class="o">.</span><span class="n">tolerant_equals</span><span class="p">(</span><span class="n">rounded</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">rounded</span>
+
+
+<span class="k">def</span> <span class="nf">check_stoplimit_prices</span><span class="p">(</span><span class="n">price</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check to make sure the stop/limit prices are reasonable and raise</span>
+<span class="sd">    a BadOrderParameters exception if not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">isfinite</span><span class="p">(</span><span class="n">price</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">BadOrderParameters</span><span class="p">(</span>
+                <span class="n">msg</span><span class="o">=</span><span class="s2">&quot;Attempted to place an order with a </span><span class="si">{}</span><span class="s2"> price &quot;</span>
+                    <span class="s2">&quot;of </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">price</span><span class="p">)</span>
+            <span class="p">)</span>
+    <span class="c1"># This catches arbitrary objects</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">BadOrderParameters</span><span class="p">(</span>
+            <span class="n">msg</span><span class="o">=</span><span class="s2">&quot;Attempted to place an order with a </span><span class="si">{}</span><span class="s2"> price &quot;</span>
+                <span class="s2">&quot;of </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">price</span><span class="p">))</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">price</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">BadOrderParameters</span><span class="p">(</span>
+            <span class="n">msg</span><span class="o">=</span><span class="s2">&quot;Can&#39;t place a </span><span class="si">{}</span><span class="s2"> order with a negative price.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+        <span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2020, Quantopian Inc..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

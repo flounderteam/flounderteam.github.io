@@ -1,0 +1,1051 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>zipline.finance.ledger &mdash; Zipline 1.4.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Zipline
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../beginner-tutorial.html">Zipline Beginner Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bundles.html">Data Bundles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../trading-calendars.html">Trading Calendars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../risk-and-perf-metrics.html">Risk and Performance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development-guidelines.html">Development Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../appendix.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release-process.html">Release Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../releases.html">Release Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Zipline</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>zipline.finance.ledger</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for zipline.finance.ledger</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright 2017 Quantopian, Inc.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span><span class="p">,</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">isnan</span>
+
+<span class="kn">import</span> <span class="nn">logbook</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">six</span> <span class="kn">import</span> <span class="n">iteritems</span><span class="p">,</span> <span class="n">itervalues</span><span class="p">,</span> <span class="n">PY2</span>
+
+<span class="kn">from</span> <span class="nn">zipline.assets</span> <span class="kn">import</span> <span class="n">Future</span>
+<span class="kn">from</span> <span class="nn">zipline.finance.transaction</span> <span class="kn">import</span> <span class="n">Transaction</span>
+<span class="kn">import</span> <span class="nn">zipline.protocol</span> <span class="k">as</span> <span class="nn">zp</span>
+<span class="kn">from</span> <span class="nn">zipline.utils.sentinel</span> <span class="kn">import</span> <span class="n">sentinel</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">Position</span>
+<span class="kn">from</span> <span class="nn">._finance_ext</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PositionStats</span><span class="p">,</span>
+    <span class="n">calculate_position_tracker_stats</span><span class="p">,</span>
+    <span class="n">update_position_last_sale_prices</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logbook</span><span class="o">.</span><span class="n">Logger</span><span class="p">(</span><span class="s1">&#39;Performance&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="PositionTracker"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.ledger.PositionTracker">[docs]</a><span class="k">class</span> <span class="nc">PositionTracker</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The current state of the positions held.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_frequency : {&#39;daily&#39;, &#39;minute&#39;}</span>
+<span class="sd">        The data frequency of the simulation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_frequency</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">positions</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unpaid_dividends</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unpaid_stock_dividends</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_positions_store</span> <span class="o">=</span> <span class="n">zp</span><span class="o">.</span><span class="n">Positions</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_frequency</span> <span class="o">=</span> <span class="n">data_frequency</span>
+
+        <span class="c1"># cache the stats until something alters our positions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_stats</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span> <span class="o">=</span> <span class="n">PositionStats</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">update_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                        <span class="n">asset</span><span class="p">,</span>
+                        <span class="n">amount</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">last_sale_price</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">last_sale_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">cost_basis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_stats</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">asset</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">:</span>
+            <span class="n">position</span> <span class="o">=</span> <span class="n">Position</span><span class="p">(</span><span class="n">asset</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span> <span class="o">=</span> <span class="n">position</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">amount</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">position</span><span class="o">.</span><span class="n">amount</span> <span class="o">=</span> <span class="n">amount</span>
+        <span class="k">if</span> <span class="n">last_sale_price</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">position</span><span class="o">.</span><span class="n">last_sale_price</span> <span class="o">=</span> <span class="n">last_sale_price</span>
+        <span class="k">if</span> <span class="n">last_sale_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">position</span><span class="o">.</span><span class="n">last_sale_date</span> <span class="o">=</span> <span class="n">last_sale_date</span>
+        <span class="k">if</span> <span class="n">cost_basis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">position</span><span class="o">.</span><span class="n">cost_basis</span> <span class="o">=</span> <span class="n">cost_basis</span>
+
+    <span class="k">def</span> <span class="nf">execute_transaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txn</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_stats</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">asset</span> <span class="o">=</span> <span class="n">txn</span><span class="o">.</span><span class="n">asset</span>
+
+        <span class="k">if</span> <span class="n">asset</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">:</span>
+            <span class="n">position</span> <span class="o">=</span> <span class="n">Position</span><span class="p">(</span><span class="n">asset</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span> <span class="o">=</span> <span class="n">position</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span>
+
+        <span class="n">position</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">txn</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">position</span><span class="o">.</span><span class="n">amount</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># if this position exists in our user-facing dictionary,</span>
+                <span class="c1"># remove it as well.</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_positions_store</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">handle_commission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asset</span><span class="p">,</span> <span class="n">cost</span><span class="p">):</span>
+        <span class="c1"># Adjust the cost basis of the stock if we own it</span>
+        <span class="k">if</span> <span class="n">asset</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_stats</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span><span class="o">.</span><span class="n">adjust_commission_cost_basis</span><span class="p">(</span><span class="n">asset</span><span class="p">,</span> <span class="n">cost</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PositionTracker.handle_splits"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.ledger.PositionTracker.handle_splits">[docs]</a>    <span class="k">def</span> <span class="nf">handle_splits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">splits</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Processes a list of splits by modifying any positions as needed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        splits: list</span>
+<span class="sd">            A list of splits.  Each split is a tuple of (asset, ratio).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int: The leftover cash from fractional shares after modifying each</span>
+<span class="sd">            position.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">total_leftover_cash</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">asset</span><span class="p">,</span> <span class="n">ratio</span> <span class="ow">in</span> <span class="n">splits</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">asset</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_stats</span> <span class="o">=</span> <span class="kc">True</span>
+
+                <span class="c1"># Make the position object handle the split. It returns the</span>
+                <span class="c1"># leftover cash from a fractional share, if there is any.</span>
+                <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span>
+                <span class="n">leftover_cash</span> <span class="o">=</span> <span class="n">position</span><span class="o">.</span><span class="n">handle_split</span><span class="p">(</span><span class="n">asset</span><span class="p">,</span> <span class="n">ratio</span><span class="p">)</span>
+                <span class="n">total_leftover_cash</span> <span class="o">+=</span> <span class="n">leftover_cash</span>
+
+        <span class="k">return</span> <span class="n">total_leftover_cash</span></div>
+
+<div class="viewcode-block" id="PositionTracker.earn_dividends"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.ledger.PositionTracker.earn_dividends">[docs]</a>    <span class="k">def</span> <span class="nf">earn_dividends</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cash_dividends</span><span class="p">,</span> <span class="n">stock_dividends</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Given a list of dividends whose ex_dates are all the next trading</span>
+<span class="sd">        day, calculate and store the cash and/or stock payments to be paid on</span>
+<span class="sd">        each dividend&#39;s pay date.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cash_dividends : iterable of (asset, amount, pay_date) namedtuples</span>
+
+<span class="sd">        stock_dividends: iterable of (asset, payment_asset, ratio, pay_date)</span>
+<span class="sd">            namedtuples.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">cash_dividend</span> <span class="ow">in</span> <span class="n">cash_dividends</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_stats</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># only mark dirty if we pay a dividend</span>
+
+            <span class="c1"># Store the earned dividends so that they can be paid on the</span>
+            <span class="c1"># dividends&#39; pay_dates.</span>
+            <span class="n">div_owed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">cash_dividend</span><span class="o">.</span><span class="n">asset</span><span class="p">]</span><span class="o">.</span><span class="n">earn_dividend</span><span class="p">(</span>
+                <span class="n">cash_dividend</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_unpaid_dividends</span><span class="p">[</span><span class="n">cash_dividend</span><span class="o">.</span><span class="n">pay_date</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">div_owed</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_unpaid_dividends</span><span class="p">[</span><span class="n">cash_dividend</span><span class="o">.</span><span class="n">pay_date</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">div_owed</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">stock_dividend</span> <span class="ow">in</span> <span class="n">stock_dividends</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_stats</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># only mark dirty if we pay a dividend</span>
+
+            <span class="n">div_owed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span>
+                <span class="n">stock_dividend</span><span class="o">.</span><span class="n">asset</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">earn_stock_dividend</span><span class="p">(</span><span class="n">stock_dividend</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_unpaid_stock_dividends</span><span class="p">[</span><span class="n">stock_dividend</span><span class="o">.</span><span class="n">pay_date</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">div_owed</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_unpaid_stock_dividends</span><span class="p">[</span><span class="n">stock_dividend</span><span class="o">.</span><span class="n">pay_date</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">div_owed</span><span class="p">,</span>
+                <span class="p">]</span></div>
+
+<div class="viewcode-block" id="PositionTracker.pay_dividends"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.ledger.PositionTracker.pay_dividends">[docs]</a>    <span class="k">def</span> <span class="nf">pay_dividends</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">next_trading_day</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a cash payment based on the dividends that should be paid out</span>
+<span class="sd">        according to the accumulated bookkeeping of earned, unpaid, and stock</span>
+<span class="sd">        dividends.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">net_cash_payment</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">payments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unpaid_dividends</span><span class="p">[</span><span class="n">next_trading_day</span><span class="p">]</span>
+            <span class="c1"># Mark these dividends as paid by dropping them from our unpaid</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unpaid_dividends</span><span class="p">[</span><span class="n">next_trading_day</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">payments</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># representing the fact that we&#39;re required to reimburse the owner of</span>
+        <span class="c1"># the stock for any dividends paid while borrowing.</span>
+        <span class="k">for</span> <span class="n">payment</span> <span class="ow">in</span> <span class="n">payments</span><span class="p">:</span>
+            <span class="n">net_cash_payment</span> <span class="o">+=</span> <span class="n">payment</span><span class="p">[</span><span class="s1">&#39;amount&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Add stock for any stock dividends paid.  Again, the values here may</span>
+        <span class="c1"># be negative in the case of short positions.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">stock_payments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unpaid_stock_dividends</span><span class="p">[</span><span class="n">next_trading_day</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">stock_payments</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">stock_payment</span> <span class="ow">in</span> <span class="n">stock_payments</span><span class="p">:</span>
+            <span class="n">payment_asset</span> <span class="o">=</span> <span class="n">stock_payment</span><span class="p">[</span><span class="s1">&#39;payment_asset&#39;</span><span class="p">]</span>
+            <span class="n">share_count</span> <span class="o">=</span> <span class="n">stock_payment</span><span class="p">[</span><span class="s1">&#39;share_count&#39;</span><span class="p">]</span>
+            <span class="c1"># note we create a Position for stock dividend if we don&#39;t</span>
+            <span class="c1"># already own the asset</span>
+            <span class="k">if</span> <span class="n">payment_asset</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">:</span>
+                <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">payment_asset</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">payment_asset</span><span class="p">]</span> <span class="o">=</span> <span class="n">Position</span><span class="p">(</span>
+                    <span class="n">payment_asset</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="n">position</span><span class="o">.</span><span class="n">amount</span> <span class="o">+=</span> <span class="n">share_count</span>
+
+        <span class="k">return</span> <span class="n">net_cash_payment</span></div>
+
+    <span class="k">def</span> <span class="nf">maybe_create_close_position_transaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asset</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">data_portal</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">asset</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">amount</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">asset</span><span class="p">)</span><span class="o">.</span><span class="n">amount</span>
+        <span class="n">price</span> <span class="o">=</span> <span class="n">data_portal</span><span class="o">.</span><span class="n">get_spot_value</span><span class="p">(</span>
+            <span class="n">asset</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_frequency</span><span class="p">)</span>
+
+        <span class="c1"># Get the last traded price if price is no longer available</span>
+        <span class="k">if</span> <span class="n">isnan</span><span class="p">(</span><span class="n">price</span><span class="p">):</span>
+            <span class="n">price</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">asset</span><span class="p">)</span><span class="o">.</span><span class="n">last_sale_price</span>
+
+        <span class="k">return</span> <span class="n">Transaction</span><span class="p">(</span>
+            <span class="n">asset</span><span class="o">=</span><span class="n">asset</span><span class="p">,</span>
+            <span class="n">amount</span><span class="o">=-</span><span class="n">amount</span><span class="p">,</span>
+            <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span>
+            <span class="n">price</span><span class="o">=</span><span class="n">price</span><span class="p">,</span>
+            <span class="n">order_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_positions_store</span>
+
+        <span class="k">for</span> <span class="n">asset</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">):</span>
+            <span class="c1"># Adds the new position if we didn&#39;t have one before, or overwrite</span>
+            <span class="c1"># one we have currently</span>
+            <span class="n">positions</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">protocol_position</span>
+
+        <span class="k">return</span> <span class="n">positions</span>
+
+    <span class="k">def</span> <span class="nf">get_position_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">pos</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">asset</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">pos</span><span class="o">.</span><span class="n">amount</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">sync_last_sale_prices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                              <span class="n">dt</span><span class="p">,</span>
+                              <span class="n">data_portal</span><span class="p">,</span>
+                              <span class="n">handle_non_market_minutes</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_stats</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">handle_non_market_minutes</span><span class="p">:</span>
+            <span class="n">previous_minute</span> <span class="o">=</span> <span class="n">data_portal</span><span class="o">.</span><span class="n">trading_calendar</span><span class="o">.</span><span class="n">previous_minute</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+            <span class="n">get_price</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+                <span class="n">data_portal</span><span class="o">.</span><span class="n">get_adjusted_value</span><span class="p">,</span>
+                <span class="n">field</span><span class="o">=</span><span class="s1">&#39;price&#39;</span><span class="p">,</span>
+                <span class="n">dt</span><span class="o">=</span><span class="n">previous_minute</span><span class="p">,</span>
+                <span class="n">perspective_dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span>
+                <span class="n">data_frequency</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_frequency</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">get_price</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+                <span class="n">data_portal</span><span class="o">.</span><span class="n">get_scalar_asset_spot_value</span><span class="p">,</span>
+                <span class="n">field</span><span class="o">=</span><span class="s1">&#39;price&#39;</span><span class="p">,</span>
+                <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span>
+                <span class="n">data_frequency</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_frequency</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">update_position_last_sale_prices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">,</span> <span class="n">get_price</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The current status of the positions.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        stats : PositionStats</span>
+<span class="sd">            The current stats position stats.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This is cached, repeated access will not recompute the stats until</span>
+<span class="sd">        the stats may have changed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_stats</span><span class="p">:</span>
+            <span class="n">calculate_position_tracker_stats</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_stats</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span></div>
+
+
+<span class="k">if</span> <span class="n">PY2</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">move_to_end</span><span class="p">(</span><span class="n">ordered_dict</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">last</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">last</span><span class="p">:</span>
+            <span class="n">ordered_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ordered_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># please don&#39;t do this in python 2 ;_;</span>
+            <span class="n">new_first_element</span> <span class="o">=</span> <span class="n">ordered_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+            <span class="c1"># the items (without the given key) in the order they were inserted</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="n">ordered_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+
+            <span class="c1"># reset the ordered_dict to re-insert in the new order</span>
+            <span class="n">ordered_dict</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+            <span class="n">ordered_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_first_element</span>
+
+            <span class="c1"># add the items back in their original order</span>
+            <span class="n">ordered_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">move_to_end</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="o">.</span><span class="n">move_to_end</span>
+
+
+<span class="n">PeriodStats</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span>
+    <span class="s1">&#39;PeriodStats&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;net_liquidation gross_leverage net_leverage&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="n">not_overridden</span> <span class="o">=</span> <span class="n">sentinel</span><span class="p">(</span>
+    <span class="s1">&#39;not_overridden&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Mark that an account field has not been overridden&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="Ledger"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.ledger.Ledger">[docs]</a><span class="k">class</span> <span class="nc">Ledger</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The ledger tracks all orders and transactions as well as the current</span>
+<span class="sd">    state of the portfolio and positions.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    portfolio : zipline.protocol.Portfolio</span>
+<span class="sd">        The updated portfolio being managed.</span>
+<span class="sd">    account : zipline.protocol.Account</span>
+<span class="sd">        The updated account being managed.</span>
+<span class="sd">    position_tracker : PositionTracker</span>
+<span class="sd">        The current set of positions.</span>
+<span class="sd">    todays_returns : float</span>
+<span class="sd">        The current day&#39;s returns. In minute emission mode, this is the partial</span>
+<span class="sd">        day&#39;s returns. In daily emission mode, this is</span>
+<span class="sd">        ``daily_returns[session]``.</span>
+<span class="sd">    daily_returns_series : pd.Series</span>
+<span class="sd">        The daily returns series. Days that have not yet finished will hold</span>
+<span class="sd">        a value of ``np.nan``.</span>
+<span class="sd">    daily_returns_array : np.ndarray</span>
+<span class="sd">        The daily returns as an ndarray. Days that have not yet finished will</span>
+<span class="sd">        hold a value of ``np.nan``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trading_sessions</span><span class="p">,</span> <span class="n">capital_base</span><span class="p">,</span> <span class="n">data_frequency</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">trading_sessions</span><span class="p">):</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">trading_sessions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Have some fields of the portfolio changed? This should be accessed</span>
+        <span class="c1"># through ``self._dirty_portfolio``</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dirty_portfolio</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_immutable_portfolio</span> <span class="o">=</span> <span class="n">zp</span><span class="o">.</span><span class="n">Portfolio</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">capital_base</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_portfolio</span> <span class="o">=</span> <span class="n">zp</span><span class="o">.</span><span class="n">MutableView</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_immutable_portfolio</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">daily_returns_series</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">trading_sessions</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># Get a view into the storage of the returns series. Metrics</span>
+        <span class="c1"># can access this directly in minute mode for performance reasons.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">daily_returns_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">daily_returns_series</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_previous_total_returns</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># this is a component of the cache key for the account</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_position_stats</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Have some fields of the account changed?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_account</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_immutable_account</span> <span class="o">=</span> <span class="n">zp</span><span class="o">.</span><span class="n">Account</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_account</span> <span class="o">=</span> <span class="n">zp</span><span class="o">.</span><span class="n">MutableView</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_immutable_account</span><span class="p">)</span>
+
+        <span class="c1"># The broker blotter can override some fields on the account. This is</span>
+        <span class="c1"># way to tangled up at the moment but we aren&#39;t fixing it today.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_account_overrides</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">position_tracker</span> <span class="o">=</span> <span class="n">PositionTracker</span><span class="p">(</span><span class="n">data_frequency</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_processed_transactions</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_orders_by_modified</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_orders_by_id</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+
+        <span class="c1"># Keyed by asset, the previous last sale price of positions with</span>
+        <span class="c1"># payouts on price differences, e.g. Futures.</span>
+        <span class="c1">#</span>
+        <span class="c1"># This dt is not the previous minute to the minute for which the</span>
+        <span class="c1"># calculation is done, but the last sale price either before the period</span>
+        <span class="c1"># start, or when the price at execution.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_payout_last_sale_prices</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">todays_returns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># compute today&#39;s returns in returns space instead of portfolio-value</span>
+        <span class="c1"># space to work even when we have capital changes</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="o">.</span><span class="n">returns</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_previous_total_returns</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span>
+            <span class="mi">1</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_dirty_portfolio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dirty_portfolio</span>
+
+    <span class="nd">@_dirty_portfolio</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">_dirty_portfolio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+            <span class="c1"># marking the portfolio as dirty also marks the account as dirty</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__dirty_portfolio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_account</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__dirty_portfolio</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">start_of_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_label</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_processed_transactions</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_orders_by_modified</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_orders_by_id</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="c1"># Save the previous day&#39;s total returns so that ``todays_returns``</span>
+        <span class="c1"># produces returns since yesterday. This does not happen in</span>
+        <span class="c1"># ``end_of_session`` because we want ``todays_returns`` to produce the</span>
+        <span class="c1"># correct value in metric ``end_of_session`` handlers.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_previous_total_returns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="o">.</span><span class="n">returns</span>
+
+    <span class="k">def</span> <span class="nf">end_of_bar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_ix</span><span class="p">):</span>
+        <span class="c1"># make daily_returns hold the partial returns, this saves many</span>
+        <span class="c1"># metrics from doing a concat and copying all of the previous</span>
+        <span class="c1"># returns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">daily_returns_array</span><span class="p">[</span><span class="n">session_ix</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">todays_returns</span>
+
+    <span class="k">def</span> <span class="nf">end_of_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_ix</span><span class="p">):</span>
+        <span class="c1"># save the daily returns time-series</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">daily_returns_series</span><span class="p">[</span><span class="n">session_ix</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">todays_returns</span>
+
+    <span class="k">def</span> <span class="nf">sync_last_sale_prices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                              <span class="n">dt</span><span class="p">,</span>
+                              <span class="n">data_portal</span><span class="p">,</span>
+                              <span class="n">handle_non_market_minutes</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position_tracker</span><span class="o">.</span><span class="n">sync_last_sale_prices</span><span class="p">(</span>
+            <span class="n">dt</span><span class="p">,</span>
+            <span class="n">data_portal</span><span class="p">,</span>
+            <span class="n">handle_non_market_minutes</span><span class="o">=</span><span class="n">handle_non_market_minutes</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_portfolio</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_calculate_payout</span><span class="p">(</span><span class="n">multiplier</span><span class="p">,</span> <span class="n">amount</span><span class="p">,</span> <span class="n">old_price</span><span class="p">,</span> <span class="n">price</span><span class="p">):</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">price</span> <span class="o">-</span> <span class="n">old_price</span><span class="p">)</span> <span class="o">*</span> <span class="n">multiplier</span> <span class="o">*</span> <span class="n">amount</span>
+
+    <span class="k">def</span> <span class="nf">_cash_flow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">amount</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_portfolio</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_portfolio</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">cash_flow</span> <span class="o">+=</span> <span class="n">amount</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">cash</span> <span class="o">+=</span> <span class="n">amount</span>
+
+<div class="viewcode-block" id="Ledger.process_transaction"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.ledger.Ledger.process_transaction">[docs]</a>    <span class="k">def</span> <span class="nf">process_transaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transaction</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a transaction to ledger, updating the current state as needed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        transaction : zp.Transaction</span>
+<span class="sd">            The transaction to execute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">asset</span> <span class="o">=</span> <span class="n">transaction</span><span class="o">.</span><span class="n">asset</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">asset</span><span class="p">,</span> <span class="n">Future</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">old_price</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_payout_last_sale_prices</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_payout_last_sale_prices</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span> <span class="o">=</span> <span class="n">transaction</span><span class="o">.</span><span class="n">price</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_tracker</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span>
+                <span class="n">amount</span> <span class="o">=</span> <span class="n">position</span><span class="o">.</span><span class="n">amount</span>
+                <span class="n">price</span> <span class="o">=</span> <span class="n">transaction</span><span class="o">.</span><span class="n">price</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cash_flow</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_payout</span><span class="p">(</span>
+                        <span class="n">asset</span><span class="o">.</span><span class="n">price_multiplier</span><span class="p">,</span>
+                        <span class="n">amount</span><span class="p">,</span>
+                        <span class="n">old_price</span><span class="p">,</span>
+                        <span class="n">price</span><span class="p">,</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">amount</span> <span class="o">+</span> <span class="n">transaction</span><span class="o">.</span><span class="n">amount</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_payout_last_sale_prices</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_payout_last_sale_prices</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span> <span class="o">=</span> <span class="n">price</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cash_flow</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">transaction</span><span class="o">.</span><span class="n">price</span> <span class="o">*</span> <span class="n">transaction</span><span class="o">.</span><span class="n">amount</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">position_tracker</span><span class="o">.</span><span class="n">execute_transaction</span><span class="p">(</span><span class="n">transaction</span><span class="p">)</span>
+
+        <span class="c1"># we only ever want the dict form from now on</span>
+        <span class="n">transaction_dict</span> <span class="o">=</span> <span class="n">transaction</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_processed_transactions</span><span class="p">[</span><span class="n">transaction</span><span class="o">.</span><span class="n">dt</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">transaction_dict</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_processed_transactions</span><span class="p">[</span><span class="n">transaction</span><span class="o">.</span><span class="n">dt</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">transaction_dict</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Ledger.process_splits"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.ledger.Ledger.process_splits">[docs]</a>    <span class="k">def</span> <span class="nf">process_splits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">splits</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Processes a list of splits by modifying any positions as needed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        splits: list[(Asset, float)]</span>
+<span class="sd">            A list of splits. Each split is a tuple of (asset, ratio).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">leftover_cash</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_tracker</span><span class="o">.</span><span class="n">handle_splits</span><span class="p">(</span><span class="n">splits</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">leftover_cash</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cash_flow</span><span class="p">(</span><span class="n">leftover_cash</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Ledger.process_order"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.ledger.Ledger.process_order">[docs]</a>    <span class="k">def</span> <span class="nf">process_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Keep track of an order that was placed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        order : zp.Order</span>
+<span class="sd">            The order to record.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">dt_orders</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orders_by_modified</span><span class="p">[</span><span class="n">order</span><span class="o">.</span><span class="n">dt</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_orders_by_modified</span><span class="p">[</span><span class="n">order</span><span class="o">.</span><span class="n">dt</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">([</span>
+                <span class="p">(</span><span class="n">order</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">order</span><span class="p">),</span>
+            <span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_orders_by_id</span><span class="p">[</span><span class="n">order</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">order</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_orders_by_id</span><span class="p">[</span><span class="n">order</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">dt_orders</span><span class="p">[</span><span class="n">order</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">order</span>
+            <span class="c1"># to preserve the order of the orders by modified date</span>
+            <span class="n">move_to_end</span><span class="p">(</span><span class="n">dt_orders</span><span class="p">,</span> <span class="n">order</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">last</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">move_to_end</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orders_by_id</span><span class="p">,</span> <span class="n">order</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">last</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Ledger.process_commission"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.ledger.Ledger.process_commission">[docs]</a>    <span class="k">def</span> <span class="nf">process_commission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">commission</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Process the commission.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        commission : zp.Event</span>
+<span class="sd">            The commission being paid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">asset</span> <span class="o">=</span> <span class="n">commission</span><span class="p">[</span><span class="s1">&#39;asset&#39;</span><span class="p">]</span>
+        <span class="n">cost</span> <span class="o">=</span> <span class="n">commission</span><span class="p">[</span><span class="s1">&#39;cost&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">position_tracker</span><span class="o">.</span><span class="n">handle_commission</span><span class="p">(</span><span class="n">asset</span><span class="p">,</span> <span class="n">cost</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cash_flow</span><span class="p">(</span><span class="o">-</span><span class="n">cost</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">close_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asset</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">data_portal</span><span class="p">):</span>
+        <span class="n">txn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_tracker</span><span class="o">.</span><span class="n">maybe_create_close_position_transaction</span><span class="p">(</span>
+            <span class="n">asset</span><span class="p">,</span>
+            <span class="n">dt</span><span class="p">,</span>
+            <span class="n">data_portal</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">txn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process_transaction</span><span class="p">(</span><span class="n">txn</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Ledger.process_dividends"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.ledger.Ledger.process_dividends">[docs]</a>    <span class="k">def</span> <span class="nf">process_dividends</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">next_session</span><span class="p">,</span> <span class="n">asset_finder</span><span class="p">,</span> <span class="n">adjustment_reader</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Process dividends for the next session.</span>
+
+<span class="sd">        This will earn us any dividends whose ex-date is the next session as</span>
+<span class="sd">        well as paying out any dividends whose pay-date is the next session</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">position_tracker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_tracker</span>
+
+        <span class="c1"># Earn dividends whose ex_date is the next trading day. We need to</span>
+        <span class="c1"># check if we own any of these stocks so we know to pay them out when</span>
+        <span class="c1"># the pay date comes.</span>
+        <span class="n">held_sids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">position_tracker</span><span class="o">.</span><span class="n">positions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">held_sids</span><span class="p">:</span>
+            <span class="n">cash_dividends</span> <span class="o">=</span> <span class="n">adjustment_reader</span><span class="o">.</span><span class="n">get_dividends_with_ex_date</span><span class="p">(</span>
+                <span class="n">held_sids</span><span class="p">,</span>
+                <span class="n">next_session</span><span class="p">,</span>
+                <span class="n">asset_finder</span>
+            <span class="p">)</span>
+            <span class="n">stock_dividends</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">adjustment_reader</span><span class="o">.</span><span class="n">get_stock_dividends_with_ex_date</span><span class="p">(</span>
+                    <span class="n">held_sids</span><span class="p">,</span>
+                    <span class="n">next_session</span><span class="p">,</span>
+                    <span class="n">asset_finder</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Earning a dividend just marks that we need to get paid out on</span>
+            <span class="c1"># the dividend&#39;s pay-date. This does not affect our cash yet.</span>
+            <span class="n">position_tracker</span><span class="o">.</span><span class="n">earn_dividends</span><span class="p">(</span>
+                <span class="n">cash_dividends</span><span class="p">,</span>
+                <span class="n">stock_dividends</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Pay out the dividends whose pay-date is the next session. This does</span>
+        <span class="c1"># affect out cash.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cash_flow</span><span class="p">(</span>
+            <span class="n">position_tracker</span><span class="o">.</span><span class="n">pay_dividends</span><span class="p">(</span>
+                <span class="n">next_session</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">capital_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_amount</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_portfolio</span><span class="p">()</span>
+        <span class="n">portfolio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_portfolio</span>
+
+        <span class="c1"># we update the cash and total value so this is not dirty</span>
+        <span class="n">portfolio</span><span class="o">.</span><span class="n">portfolio_value</span> <span class="o">+=</span> <span class="n">change_amount</span>
+        <span class="n">portfolio</span><span class="o">.</span><span class="n">cash</span> <span class="o">+=</span> <span class="n">change_amount</span>
+
+<div class="viewcode-block" id="Ledger.transactions"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.ledger.Ledger.transactions">[docs]</a>    <span class="k">def</span> <span class="nf">transactions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retrieve the dict-form of all of the transactions in a given bar or</span>
+<span class="sd">        for the whole simulation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dt : pd.Timestamp or None, optional</span>
+<span class="sd">            The particular datetime to look up transactions for. If not passed,</span>
+<span class="sd">            or None is explicitly passed, all of the transactions will be</span>
+<span class="sd">            returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        transactions : list[dict]</span>
+<span class="sd">            The transaction information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># flatten the by-day transactions</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="n">txn</span>
+                <span class="k">for</span> <span class="n">by_day</span> <span class="ow">in</span> <span class="n">itervalues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_processed_transactions</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">txn</span> <span class="ow">in</span> <span class="n">by_day</span>
+            <span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_processed_transactions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="p">[])</span></div>
+
+<div class="viewcode-block" id="Ledger.orders"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.ledger.Ledger.orders">[docs]</a>    <span class="k">def</span> <span class="nf">orders</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retrieve the dict-form of all of the orders in a given bar or for</span>
+<span class="sd">        the whole simulation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dt : pd.Timestamp or None, optional</span>
+<span class="sd">            The particular datetime to look up order for. If not passed, or</span>
+<span class="sd">            None is explicitly passed, all of the orders will be returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        orders : list[dict]</span>
+<span class="sd">            The order information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># orders by id is already flattened</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">itervalues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orders_by_id</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">o</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">itervalues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orders_by_modified</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="p">]</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">positions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_tracker</span><span class="o">.</span><span class="n">get_position_list</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_payout_total</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">positions</span><span class="p">):</span>
+        <span class="n">calculate_payout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_payout</span>
+        <span class="n">payout_last_sale_prices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_payout_last_sale_prices</span>
+
+        <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">asset</span><span class="p">,</span> <span class="n">old_price</span> <span class="ow">in</span> <span class="n">iteritems</span><span class="p">(</span><span class="n">payout_last_sale_prices</span><span class="p">):</span>
+            <span class="n">position</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span>
+            <span class="n">payout_last_sale_prices</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span> <span class="o">=</span> <span class="n">price</span> <span class="o">=</span> <span class="n">position</span><span class="o">.</span><span class="n">last_sale_price</span>
+            <span class="n">amount</span> <span class="o">=</span> <span class="n">position</span><span class="o">.</span><span class="n">amount</span>
+            <span class="n">total</span> <span class="o">+=</span> <span class="n">calculate_payout</span><span class="p">(</span>
+                <span class="n">asset</span><span class="o">.</span><span class="n">price_multiplier</span><span class="p">,</span>
+                <span class="n">amount</span><span class="p">,</span>
+                <span class="n">old_price</span><span class="p">,</span>
+                <span class="n">price</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">total</span>
+
+<div class="viewcode-block" id="Ledger.update_portfolio"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.ledger.Ledger.update_portfolio">[docs]</a>    <span class="k">def</span> <span class="nf">update_portfolio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Force a computation of the current portfolio state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_portfolio</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">portfolio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_portfolio</span>
+        <span class="n">pt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_tracker</span>
+
+        <span class="n">portfolio</span><span class="o">.</span><span class="n">positions</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">get_positions</span><span class="p">()</span>
+        <span class="n">position_stats</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">stats</span>
+
+        <span class="n">portfolio</span><span class="o">.</span><span class="n">positions_value</span> <span class="o">=</span> <span class="n">position_value</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">position_stats</span><span class="o">.</span><span class="n">net_value</span>
+        <span class="p">)</span>
+        <span class="n">portfolio</span><span class="o">.</span><span class="n">positions_exposure</span> <span class="o">=</span> <span class="n">position_stats</span><span class="o">.</span><span class="n">net_exposure</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cash_flow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_payout_total</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">positions</span><span class="p">))</span>
+
+        <span class="n">start_value</span> <span class="o">=</span> <span class="n">portfolio</span><span class="o">.</span><span class="n">portfolio_value</span>
+
+        <span class="c1"># update the new starting value</span>
+        <span class="n">portfolio</span><span class="o">.</span><span class="n">portfolio_value</span> <span class="o">=</span> <span class="n">end_value</span> <span class="o">=</span> <span class="n">portfolio</span><span class="o">.</span><span class="n">cash</span> <span class="o">+</span> <span class="n">position_value</span>
+
+        <span class="n">pnl</span> <span class="o">=</span> <span class="n">end_value</span> <span class="o">-</span> <span class="n">start_value</span>
+        <span class="k">if</span> <span class="n">start_value</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">returns</span> <span class="o">=</span> <span class="n">pnl</span> <span class="o">/</span> <span class="n">start_value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">returns</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="n">portfolio</span><span class="o">.</span><span class="n">pnl</span> <span class="o">+=</span> <span class="n">pnl</span>
+        <span class="n">portfolio</span><span class="o">.</span><span class="n">returns</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">portfolio</span><span class="o">.</span><span class="n">returns</span><span class="p">)</span> <span class="o">*</span>
+            <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">returns</span><span class="p">)</span> <span class="o">-</span>
+            <span class="mi">1</span>
+        <span class="p">)</span>
+
+        <span class="c1"># the portfolio has been fully synced</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_portfolio</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">portfolio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the current portfolio.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This is cached, repeated access will not recompute the portfolio until</span>
+<span class="sd">        the portfolio may have changed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_portfolio</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_immutable_portfolio</span>
+
+    <span class="k">def</span> <span class="nf">calculate_period_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">position_stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_tracker</span><span class="o">.</span><span class="n">stats</span>
+        <span class="n">portfolio_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="o">.</span><span class="n">portfolio_value</span>
+
+        <span class="k">if</span> <span class="n">portfolio_value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">gross_leverage</span> <span class="o">=</span> <span class="n">net_leverage</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gross_leverage</span> <span class="o">=</span> <span class="n">position_stats</span><span class="o">.</span><span class="n">gross_exposure</span> <span class="o">/</span> <span class="n">portfolio_value</span>
+            <span class="n">net_leverage</span> <span class="o">=</span> <span class="n">position_stats</span><span class="o">.</span><span class="n">net_exposure</span> <span class="o">/</span> <span class="n">portfolio_value</span>
+
+        <span class="k">return</span> <span class="n">portfolio_value</span><span class="p">,</span> <span class="n">gross_leverage</span><span class="p">,</span> <span class="n">net_leverage</span>
+
+<div class="viewcode-block" id="Ledger.override_account_fields"><a class="viewcode-back" href="../../../appendix.html#zipline.finance.ledger.Ledger.override_account_fields">[docs]</a>    <span class="k">def</span> <span class="nf">override_account_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                <span class="n">settled_cash</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">accrued_interest</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">buying_power</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">equity_with_loan</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">total_positions_value</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">total_positions_exposure</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">regt_equity</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">regt_margin</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">initial_margin_requirement</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">maintenance_margin_requirement</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">available_funds</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">excess_liquidity</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">cushion</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">day_trades_remaining</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">leverage</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">net_leverage</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">,</span>
+                                <span class="n">net_liquidation</span><span class="o">=</span><span class="n">not_overridden</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override fields on ``self.account``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># mark that the portfolio is dirty to override the fields again</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_account</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_account_overrides</span> <span class="o">=</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">not_overridden</span>
+        <span class="p">}</span>
+        <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;self&#39;</span><span class="p">]</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">account</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_account</span><span class="p">:</span>
+            <span class="n">portfolio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span>
+
+            <span class="n">account</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_account</span>
+
+            <span class="c1"># If no attribute is found in the ``_account_overrides`` resort to</span>
+            <span class="c1"># the following default values. If an attribute is found use the</span>
+            <span class="c1"># existing value. For instance, a broker may provide updates to</span>
+            <span class="c1"># these attributes. In this case we do not want to over write the</span>
+            <span class="c1"># broker values with the default values.</span>
+            <span class="n">account</span><span class="o">.</span><span class="n">settled_cash</span> <span class="o">=</span> <span class="n">portfolio</span><span class="o">.</span><span class="n">cash</span>
+            <span class="n">account</span><span class="o">.</span><span class="n">accrued_interest</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">account</span><span class="o">.</span><span class="n">buying_power</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+            <span class="n">account</span><span class="o">.</span><span class="n">equity_with_loan</span> <span class="o">=</span> <span class="n">portfolio</span><span class="o">.</span><span class="n">portfolio_value</span>
+            <span class="n">account</span><span class="o">.</span><span class="n">total_positions_value</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">portfolio</span><span class="o">.</span><span class="n">portfolio_value</span> <span class="o">-</span> <span class="n">portfolio</span><span class="o">.</span><span class="n">cash</span>
+            <span class="p">)</span>
+            <span class="n">account</span><span class="o">.</span><span class="n">total_positions_exposure</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">portfolio</span><span class="o">.</span><span class="n">positions_exposure</span>
+            <span class="p">)</span>
+            <span class="n">account</span><span class="o">.</span><span class="n">regt_equity</span> <span class="o">=</span> <span class="n">portfolio</span><span class="o">.</span><span class="n">cash</span>
+            <span class="n">account</span><span class="o">.</span><span class="n">regt_margin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+            <span class="n">account</span><span class="o">.</span><span class="n">initial_margin_requirement</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">account</span><span class="o">.</span><span class="n">maintenance_margin_requirement</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">account</span><span class="o">.</span><span class="n">available_funds</span> <span class="o">=</span> <span class="n">portfolio</span><span class="o">.</span><span class="n">cash</span>
+            <span class="n">account</span><span class="o">.</span><span class="n">excess_liquidity</span> <span class="o">=</span> <span class="n">portfolio</span><span class="o">.</span><span class="n">cash</span>
+            <span class="n">account</span><span class="o">.</span><span class="n">cushion</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="p">(</span><span class="n">portfolio</span><span class="o">.</span><span class="n">cash</span> <span class="o">/</span> <span class="n">portfolio</span><span class="o">.</span><span class="n">portfolio_value</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">portfolio</span><span class="o">.</span><span class="n">portfolio_value</span> <span class="k">else</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="p">)</span>
+            <span class="n">account</span><span class="o">.</span><span class="n">day_trades_remaining</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+            <span class="p">(</span><span class="n">account</span><span class="o">.</span><span class="n">net_liquidation</span><span class="p">,</span>
+             <span class="n">account</span><span class="o">.</span><span class="n">gross_leverage</span><span class="p">,</span>
+             <span class="n">account</span><span class="o">.</span><span class="n">net_leverage</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_period_stats</span><span class="p">()</span>
+
+            <span class="n">account</span><span class="o">.</span><span class="n">leverage</span> <span class="o">=</span> <span class="n">account</span><span class="o">.</span><span class="n">gross_leverage</span>
+
+            <span class="c1"># apply the overrides</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_account_overrides</span><span class="p">):</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">account</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+            <span class="c1"># the account has been fully synced</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dirty_account</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_immutable_account</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2020, Quantopian Inc..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

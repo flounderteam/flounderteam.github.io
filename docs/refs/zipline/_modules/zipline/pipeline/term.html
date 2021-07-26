@@ -1,0 +1,1207 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>zipline.pipeline.term &mdash; Zipline 1.4.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Zipline
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../beginner-tutorial.html">Zipline Beginner Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bundles.html">Data Bundles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../trading-calendars.html">Trading Calendars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../risk-and-perf-metrics.html">Risk and Performance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development-guidelines.html">Development Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../appendix.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release-process.html">Release Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../releases.html">Release Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Zipline</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>zipline.pipeline.term</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for zipline.pipeline.term</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Base class for Filters, Factors and Classifiers</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractproperty</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">bisect</span> <span class="kn">import</span> <span class="n">insort</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">from</span> <span class="nn">weakref</span> <span class="kn">import</span> <span class="n">WeakValueDictionary</span>
+
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">array</span><span class="p">,</span>
+    <span class="n">dtype</span> <span class="k">as</span> <span class="n">dtype_class</span><span class="p">,</span>
+    <span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">six</span> <span class="kn">import</span> <span class="n">with_metaclass</span>
+
+<span class="kn">from</span> <span class="nn">zipline.assets</span> <span class="kn">import</span> <span class="n">Asset</span>
+<span class="kn">from</span> <span class="nn">zipline.errors</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DTypeNotSpecified</span><span class="p">,</span>
+    <span class="n">InvalidOutputName</span><span class="p">,</span>
+    <span class="n">NonSliceableTerm</span><span class="p">,</span>
+    <span class="n">NonWindowSafeInput</span><span class="p">,</span>
+    <span class="n">NotDType</span><span class="p">,</span>
+    <span class="n">NonPipelineInputs</span><span class="p">,</span>
+    <span class="n">TermInputsNotSpecified</span><span class="p">,</span>
+    <span class="n">TermOutputsEmpty</span><span class="p">,</span>
+    <span class="n">UnsupportedDType</span><span class="p">,</span>
+    <span class="n">WindowLengthNotSpecified</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">zipline.lib.adjusted_array</span> <span class="kn">import</span> <span class="n">can_represent_dtype</span>
+<span class="kn">from</span> <span class="nn">zipline.lib.labelarray</span> <span class="kn">import</span> <span class="n">LabelArray</span>
+<span class="kn">from</span> <span class="nn">zipline.utils.input_validation</span> <span class="kn">import</span> <span class="n">expect_types</span>
+<span class="kn">from</span> <span class="nn">zipline.utils.memoize</span> <span class="kn">import</span> <span class="n">classlazyval</span><span class="p">,</span> <span class="n">lazyval</span>
+<span class="kn">from</span> <span class="nn">zipline.utils.numpy_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">bool_dtype</span><span class="p">,</span>
+    <span class="n">categorical_dtype</span><span class="p">,</span>
+    <span class="n">datetime64ns_dtype</span><span class="p">,</span>
+    <span class="n">default_missing_value_for_dtype</span><span class="p">,</span>
+    <span class="n">float64_dtype</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">zipline.utils.sharedoc</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">templated_docstring</span><span class="p">,</span>
+    <span class="n">PIPELINE_ALIAS_NAME_DOC</span><span class="p">,</span>
+    <span class="n">PIPELINE_DOWNSAMPLING_FREQUENCY_DOC</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.domain</span> <span class="kn">import</span> <span class="n">Domain</span><span class="p">,</span> <span class="n">GENERIC</span><span class="p">,</span> <span class="n">infer_domain</span>
+<span class="kn">from</span> <span class="nn">.downsample_helpers</span> <span class="kn">import</span> <span class="n">expect_downsample_frequency</span>
+<span class="kn">from</span> <span class="nn">.sentinels</span> <span class="kn">import</span> <span class="n">NotSpecified</span>
+
+
+<div class="viewcode-block" id="Term"><a class="viewcode-back" href="../../../appendix.html#zipline.pipeline.Term">[docs]</a><span class="k">class</span> <span class="nc">Term</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">,</span> <span class="nb">object</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for objects that can appear in the compute graph of a</span>
+<span class="sd">    :class:`zipline.pipeline.Pipeline`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Most Pipeline API users only interact with :class:`Term` via subclasses:</span>
+
+<span class="sd">    - :class:`~zipline.pipeline.data.BoundColumn`</span>
+<span class="sd">    - :class:`~zipline.pipeline.Factor`</span>
+<span class="sd">    - :class:`~zipline.pipeline.Filter`</span>
+<span class="sd">    - :class:`~zipline.pipeline.Classifier`</span>
+
+<span class="sd">    Instances of :class:`Term` are **memoized**. If you call a Term&#39;s</span>
+<span class="sd">    constructor with the same arguments twice, the same object will be returned</span>
+<span class="sd">    from both calls:</span>
+
+<span class="sd">    **Example:**</span>
+
+<span class="sd">    &gt;&gt;&gt; from zipline.pipeline.data import EquityPricing</span>
+<span class="sd">    &gt;&gt;&gt; from zipline.pipeline.factors import SimpleMovingAverage</span>
+<span class="sd">    &gt;&gt;&gt; x = SimpleMovingAverage(inputs=[EquityPricing.close], window_length=5)</span>
+<span class="sd">    &gt;&gt;&gt; y = SimpleMovingAverage(inputs=[EquityPricing.close], window_length=5)</span>
+<span class="sd">    &gt;&gt;&gt; x is y</span>
+<span class="sd">    True</span>
+
+<span class="sd">    .. warning::</span>
+
+<span class="sd">       Memoization of terms means that it&#39;s generally unsafe to modify</span>
+<span class="sd">       attributes of a term after construction.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># These are NotSpecified because a subclass is required to provide them.</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">NotSpecified</span>
+    <span class="n">missing_value</span> <span class="o">=</span> <span class="n">NotSpecified</span>
+
+    <span class="c1"># Subclasses aren&#39;t required to provide `params`.  The default behavior is</span>
+    <span class="c1"># no params.</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="c1"># All terms are generic by default.</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">GENERIC</span>
+
+    <span class="c1"># Determines if a term is safe to be used as a windowed input.</span>
+    <span class="n">window_safe</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># The dimensions of the term&#39;s output (1D or 2D).</span>
+    <span class="n">ndim</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="n">_term_cache</span> <span class="o">=</span> <span class="n">WeakValueDictionary</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">NotSpecified</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">NotSpecified</span><span class="p">,</span>
+                <span class="n">missing_value</span><span class="o">=</span><span class="n">NotSpecified</span><span class="p">,</span>
+                <span class="n">window_safe</span><span class="o">=</span><span class="n">NotSpecified</span><span class="p">,</span>
+                <span class="n">ndim</span><span class="o">=</span><span class="n">NotSpecified</span><span class="p">,</span>
+                <span class="c1"># params is explicitly not allowed to be passed to an instance.</span>
+                <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Memoized constructor for Terms.</span>
+
+<span class="sd">        Caching previously-constructed Terms is useful because it allows us to</span>
+<span class="sd">        only compute equivalent sub-expressions once when traversing a Pipeline</span>
+<span class="sd">        dependency graph.</span>
+
+<span class="sd">        Caching previously-constructed Terms is **sane** because terms and</span>
+<span class="sd">        their inputs are both conceptually immutable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Subclasses can override these class-level attributes to provide</span>
+        <span class="c1"># different default values for instances.</span>
+        <span class="k">if</span> <span class="n">domain</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="n">domain</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">domain</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="k">if</span> <span class="n">missing_value</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="n">missing_value</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">missing_value</span>
+        <span class="k">if</span> <span class="n">ndim</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="n">ndim</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="k">if</span> <span class="n">window_safe</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="n">window_safe</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">window_safe</span>
+
+        <span class="n">dtype</span><span class="p">,</span> <span class="n">missing_value</span> <span class="o">=</span> <span class="n">validate_dtype</span><span class="p">(</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="p">,</span>
+            <span class="n">missing_value</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_pop_params</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">identity</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_static_identity</span><span class="p">(</span>
+            <span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">missing_value</span><span class="o">=</span><span class="n">missing_value</span><span class="p">,</span>
+            <span class="n">window_safe</span><span class="o">=</span><span class="n">window_safe</span><span class="p">,</span>
+            <span class="n">ndim</span><span class="o">=</span><span class="n">ndim</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_term_cache</span><span class="p">[</span><span class="n">identity</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">new_instance</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_term_cache</span><span class="p">[</span><span class="n">identity</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="nb">super</span><span class="p">(</span><span class="n">Term</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span>
+                    <span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+                    <span class="n">missing_value</span><span class="o">=</span><span class="n">missing_value</span><span class="p">,</span>
+                    <span class="n">window_safe</span><span class="o">=</span><span class="n">window_safe</span><span class="p">,</span>
+                    <span class="n">ndim</span><span class="o">=</span><span class="n">ndim</span><span class="p">,</span>
+                    <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+                    <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">new_instance</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_pop_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pop entries from the `kwargs` passed to cls.__new__ based on the values</span>
+<span class="sd">        in `cls.params`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            The kwargs passed to cls.__new__.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        params : list[(str, object)]</span>
+<span class="sd">            A list of string, value pairs containing the entries in cls.params.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            Raised if any parameter values are not passed or not hashable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">params</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">NotSpecified</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">params</span><span class="p">}</span>
+        <span class="n">param_values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">default_value</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default_value</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+                <span class="c1"># Check here that the value is hashable so that we fail here</span>
+                <span class="c1"># instead of trying to hash the param values tuple later.</span>
+                <span class="nb">hash</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="si">{typename}</span><span class="s2"> expected a keyword parameter </span><span class="si">{name!r}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">typename</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                        <span class="n">name</span><span class="o">=</span><span class="n">key</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="c1"># Value wasn&#39;t hashable.</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="si">{typename}</span><span class="s2"> expected a hashable value for parameter &quot;</span>
+                    <span class="s2">&quot;</span><span class="si">{name!r}</span><span class="s2">, but got </span><span class="si">{value!r}</span><span class="s2"> instead.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">typename</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                        <span class="n">name</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
+                        <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="n">param_values</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">param_values</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Noop constructor to play nicely with our caching __new__.  Subclasses</span>
+<span class="sd">        should implement _init instead of this method.</span>
+
+<span class="sd">        When a class&#39; __new__ returns an instance of that class, Python will</span>
+<span class="sd">        automatically call __init__ on the object, even if a new object wasn&#39;t</span>
+<span class="sd">        actually constructed.  Because we memoize instances, we often return an</span>
+<span class="sd">        object that was already initialized from __new__, in which case we</span>
+<span class="sd">        don&#39;t want to call __init__ again.</span>
+
+<span class="sd">        Subclasses that need to initialize new instances should override _init,</span>
+<span class="sd">        which is guaranteed to be called only once.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@expect_types</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">Asset</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">LoadableTerm</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">NonSliceableTerm</span><span class="p">(</span><span class="n">term</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="kn">from</span> <span class="nn">.mixins</span> <span class="kn">import</span> <span class="n">SliceMixin</span>
+        <span class="n">slice_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_with_mixin</span><span class="p">(</span><span class="n">SliceMixin</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">slice_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_static_identity</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+                         <span class="n">domain</span><span class="p">,</span>
+                         <span class="n">dtype</span><span class="p">,</span>
+                         <span class="n">missing_value</span><span class="p">,</span>
+                         <span class="n">window_safe</span><span class="p">,</span>
+                         <span class="n">ndim</span><span class="p">,</span>
+                         <span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the identity of the Term that would be constructed from the</span>
+<span class="sd">        given arguments.</span>
+
+<span class="sd">        Identities that compare equal will cause us to return a cached instance</span>
+<span class="sd">        rather than constructing a new one.  We do this primarily because it</span>
+<span class="sd">        makes dependency resolution easier.</span>
+
+<span class="sd">        This is a classmethod so that it can be called from Term.__new__ to</span>
+<span class="sd">        determine whether to produce a new instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">missing_value</span><span class="p">,</span> <span class="n">window_safe</span><span class="p">,</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">missing_value</span><span class="p">,</span> <span class="n">window_safe</span><span class="p">,</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        domain : zipline.pipeline.domain.Domain</span>
+<span class="sd">            The domain of this term.</span>
+<span class="sd">        dtype : np.dtype</span>
+<span class="sd">            Dtype of this term&#39;s output.</span>
+<span class="sd">        missing_value : object</span>
+<span class="sd">            Missing value for this term.</span>
+<span class="sd">        ndim : 1 or 2</span>
+<span class="sd">            The dimensionality of this term.</span>
+<span class="sd">        params : tuple[(str, hashable)]</span>
+<span class="sd">            Tuple of key/value pairs of additional parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="o">=</span> <span class="n">domain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">missing_value</span> <span class="o">=</span> <span class="n">missing_value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_safe</span> <span class="o">=</span> <span class="n">window_safe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">=</span> <span class="n">ndim</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;Parameter </span><span class="si">{name!r}</span><span class="s2"> conflicts with already-present&quot;</span>
+                    <span class="s2">&quot; attribute with value </span><span class="si">{value!r}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                        <span class="n">value</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="c1"># TODO: Consider setting these values as attributes and replacing</span>
+            <span class="c1"># the boilerplate in NumericalExpression, Rank, and</span>
+            <span class="c1"># PercentileFilter.</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+        <span class="c1"># Make sure that subclasses call super() in their _validate() methods</span>
+        <span class="c1"># by setting this flag.  The base class implementation of _validate</span>
+        <span class="c1"># should set this flag to True.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subclass_called_super_validate</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subclass_called_super_validate</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s2">&quot;Term._validate() was not called.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;This probably means that you overrode _validate&quot;</span>
+            <span class="s2">&quot; without calling super().&quot;</span>
+        <span class="p">)</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subclass_called_super_validate</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Assert that this term is well-formed.  This should be called exactly</span>
+<span class="sd">        once, at the end of Term._init().</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># mark that we got here to enforce that subclasses overriding _validate</span>
+        <span class="c1"># call super().</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subclass_called_super_validate</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">compute_extra_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                           <span class="n">all_dates</span><span class="p">,</span>
+                           <span class="n">start_date</span><span class="p">,</span>
+                           <span class="n">end_date</span><span class="p">,</span>
+                           <span class="n">min_extra_rows</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the number of extra rows needed to compute ``self``.</span>
+
+<span class="sd">        Must return at least ``min_extra_rows``, and the default implementation</span>
+<span class="sd">        is to just return ``min_extra_rows``.  This is overridden by</span>
+<span class="sd">        downsampled terms to ensure that the first date computed is a</span>
+<span class="sd">        recomputation date.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        all_dates : pd.DatetimeIndex</span>
+<span class="sd">            The trading sessions against which ``self`` will be computed.</span>
+<span class="sd">        start_date : pd.Timestamp</span>
+<span class="sd">            The first date for which final output is requested.</span>
+<span class="sd">        end_date : pd.Timestamp</span>
+<span class="sd">            The last date for which final output is requested.</span>
+<span class="sd">        min_extra_rows : int</span>
+<span class="sd">            The minimum number of extra rows required of ``self``, as</span>
+<span class="sd">            determined by other terms that depend on ``self``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        extra_rows : int</span>
+<span class="sd">            The number of extra rows to compute.  Must be at least</span>
+<span class="sd">            ``min_extra_rows``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">min_extra_rows</span>
+
+    <span class="nd">@abstractproperty</span>
+    <span class="k">def</span> <span class="nf">inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A tuple of other Terms needed as inputs for ``self``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;inputs&#39;</span><span class="p">)</span>
+
+    <span class="nd">@abstractproperty</span>
+    <span class="k">def</span> <span class="nf">windowed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Boolean indicating whether this term is a trailing-window computation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;windowed&#39;</span><span class="p">)</span>
+
+    <span class="nd">@abstractproperty</span>
+    <span class="k">def</span> <span class="nf">mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A :class:`~zipline.pipeline.Filter` representing asset/date pairs to</span>
+<span class="sd">        while computing this Term. True means include; False means exclude.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;mask&#39;</span><span class="p">)</span>
+
+    <span class="nd">@abstractproperty</span>
+    <span class="k">def</span> <span class="nf">dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A dictionary mapping terms that must be computed before `self` to the</span>
+<span class="sd">        number of extra rows needed for those terms.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;dependencies&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Term.graph_repr"><a class="viewcode-back" href="../../../appendix.html#zipline.pipeline.Term.graph_repr">[docs]</a>    <span class="k">def</span> <span class="nf">graph_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A short repr to use when rendering GraphViz graphs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Default graph_repr is just the name of the type.</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span></div>
+
+<div class="viewcode-block" id="Term.recursive_repr"><a class="viewcode-back" href="../../../appendix.html#zipline.pipeline.Term.recursive_repr">[docs]</a>    <span class="k">def</span> <span class="nf">recursive_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A short repr to use when recursively rendering terms with inputs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Default recursive_repr is just the name of the type.</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">AssetExists</span><span class="p">(</span><span class="n">Term</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Pseudo-filter describing whether or not an asset existed on a given day.</span>
+<span class="sd">    This is the default mask for all terms that haven&#39;t been passed a mask</span>
+<span class="sd">    explicitly.</span>
+
+<span class="sd">    This is morally a Filter, in the sense that it produces a boolean value for</span>
+<span class="sd">    every asset on every date.  We don&#39;t subclass Filter, however, because</span>
+<span class="sd">    `AssetExists` is computed directly by the PipelineEngine.</span>
+
+<span class="sd">    This term is guaranteed to be available as an input for any term computed</span>
+<span class="sd">    by SimplePipelineEngine.run_pipeline().</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    zipline.assets.AssetFinder.lifetimes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">bool_dtype</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">dependencies</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">windowed</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;AssetExists()&quot;</span>
+
+    <span class="n">graph_repr</span> <span class="o">=</span> <span class="fm">__repr__</span>
+
+    <span class="k">def</span> <span class="nf">_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">today</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;AssetExists cannot be computed directly.&quot;</span>
+            <span class="s2">&quot; Check your PipelineEngine configuration.&quot;</span>
+        <span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">InputDates</span><span class="p">(</span><span class="n">Term</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    1-Dimensional term providing date labels for other term inputs.</span>
+
+<span class="sd">    This term is guaranteed to be available as an input for any term computed</span>
+<span class="sd">    by SimplePipelineEngine.run_pipeline().</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ndim</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">datetime64ns_dtype</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">dependencies</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">windowed</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">window_safe</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;InputDates()&quot;</span>
+
+    <span class="n">graph_repr</span> <span class="o">=</span> <span class="fm">__repr__</span>
+
+    <span class="k">def</span> <span class="nf">_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">today</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;InputDates cannot be computed directly.&quot;</span>
+            <span class="s2">&quot; Check your PipelineEngine configuration.&quot;</span>
+        <span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">LoadableTerm</span><span class="p">(</span><span class="n">Term</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Term that should be loaded from an external resource by a PipelineLoader.</span>
+
+<span class="sd">    This is the base class for :class:`zipline.pipeline.data.BoundColumn`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">windowed</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="nd">@lazyval</span>
+    <span class="k">def</span> <span class="nf">dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">ComputableTerm</span><span class="p">(</span><span class="n">Term</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Term that should be computed from a tuple of inputs.</span>
+
+<span class="sd">    This is the base class for :class:`zipline.pipeline.Factor`,</span>
+<span class="sd">    :class:`zipline.pipeline.Filter`, and :class:`zipline.pipeline.Classifier`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">NotSpecified</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="n">NotSpecified</span>
+    <span class="n">window_length</span> <span class="o">=</span> <span class="n">NotSpecified</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">NotSpecified</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">NotSpecified</span>
+
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+                <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+                <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">,</span>
+                <span class="n">window_length</span><span class="o">=</span><span class="n">window_length</span><span class="p">,</span>
+                <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+                <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">inputs</span>
+
+        <span class="c1"># Having inputs = NotSpecified is an error, but we handle it later</span>
+        <span class="c1"># in self._validate rather than here.</span>
+        <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="c1"># Allow users to specify lists as class-level defaults, but</span>
+            <span class="c1"># normalize to a tuple so that inputs is hashable.</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+            <span class="c1"># Make sure all our inputs are valid pipeline objects before trying</span>
+            <span class="c1"># to infer a domain.</span>
+            <span class="n">non_terms</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">inputs</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">Term</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">non_terms</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">NonPipelineInputs</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">non_terms</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">domain</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+                <span class="n">domain</span> <span class="o">=</span> <span class="n">infer_domain</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">outputs</span>
+        <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">mask</span>
+        <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">AssetExists</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">window_length</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="n">window_length</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">window_length</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">ComputableTerm</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span>
+            <span class="bp">cls</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+            <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">,</span>
+            <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
+            <span class="n">window_length</span><span class="o">=</span><span class="n">window_length</span><span class="p">,</span>
+            <span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">window_length</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="o">=</span> <span class="n">outputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_length</span> <span class="o">=</span> <span class="n">window_length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">ComputableTerm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_static_identity</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+                         <span class="n">inputs</span><span class="p">,</span>
+                         <span class="n">outputs</span><span class="p">,</span>
+                         <span class="n">window_length</span><span class="p">,</span>
+                         <span class="n">mask</span><span class="p">,</span>
+                         <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+                         <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ComputableTerm</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="n">_static_identity</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+            <span class="n">inputs</span><span class="p">,</span>
+            <span class="n">outputs</span><span class="p">,</span>
+            <span class="n">window_length</span><span class="p">,</span>
+            <span class="n">mask</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ComputableTerm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_validate</span><span class="p">()</span>
+
+        <span class="c1"># Check inputs.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TermInputsNotSpecified</span><span class="p">(</span><span class="n">termname</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">Domain</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Expected </span><span class="si">{}</span><span class="s2">.domain to be an instance of Domain, &quot;</span>
+                <span class="s2">&quot;but got </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Check outputs.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TermOutputsEmpty</span><span class="p">(</span><span class="n">termname</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Raise an exception if there are any naming conflicts between the</span>
+            <span class="c1"># term&#39;s output names and certain attributes.</span>
+            <span class="n">disallowed_names</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">attr</span> <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">ComputableTerm</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+            <span class="p">]</span>
+
+            <span class="c1"># The name &#39;compute&#39; is an added special case that is disallowed.</span>
+            <span class="c1"># Use insort to add it to the list in alphabetical order.</span>
+            <span class="n">insort</span><span class="p">(</span><span class="n">disallowed_names</span><span class="p">,</span> <span class="s1">&#39;compute&#39;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">disallowed_names</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">InvalidOutputName</span><span class="p">(</span>
+                        <span class="n">output_name</span><span class="o">=</span><span class="n">output</span><span class="p">,</span>
+                        <span class="n">termname</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                        <span class="n">disallowed_names</span><span class="o">=</span><span class="n">disallowed_names</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_length</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WindowLengthNotSpecified</span><span class="p">(</span><span class="n">termname</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="c1"># This isn&#39;t user error, this is a bug in our code.</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{term}</span><span class="s2"> has no mask&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">term</span><span class="o">=</span><span class="bp">self</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_length</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">child</span><span class="o">.</span><span class="n">window_safe</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">NonWindowSafeInput</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="o">=</span><span class="n">child</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">dates</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subclasses should implement this to perform actual computation.</span>
+
+<span class="sd">        This is named ``_compute`` rather than just ``compute`` because</span>
+<span class="sd">        ``compute`` is reserved for user-supplied functions in</span>
+<span class="sd">        CustomFilter/CustomFactor/CustomClassifier.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;_compute&#39;</span><span class="p">)</span>
+
+    <span class="c1"># NOTE: This is a method rather than a property because ABCMeta tries to</span>
+    <span class="c1">#       access all abstract attributes of its child classes to see if</span>
+    <span class="c1">#       they&#39;ve been implemented. These accesses happen during subclass</span>
+    <span class="c1">#       creation, before the new subclass has been bound to a name in its</span>
+    <span class="c1">#       defining scope. Filter, Factor, and Classifier each implement this</span>
+    <span class="c1">#       method to return themselves, but if the method is invoked before</span>
+    <span class="c1">#       class definition is finished (which happens if this is a property),</span>
+    <span class="c1">#       they fail with a NameError.</span>
+    <span class="nd">@classmethod</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_principal_computable_term_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the &quot;principal&quot; type for a ComputableTerm.</span>
+
+<span class="sd">        This returns either Filter, Factor, or Classifier, depending on the</span>
+<span class="sd">        type of ``cls``. It is used to implement behaviors like ``downsample``</span>
+<span class="sd">        and ``if_then_else`` that are implemented on all ComputableTerms, but</span>
+<span class="sd">        that need to produce different output types depending on the type of</span>
+<span class="sd">        the receiver.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;_principal_computable_term_type&#39;</span><span class="p">)</span>
+
+    <span class="nd">@lazyval</span>
+    <span class="k">def</span> <span class="nf">windowed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Whether or not this term represents a trailing window computation.</span>
+
+<span class="sd">        If term.windowed is truthy, its compute_from_windows method will be</span>
+<span class="sd">        called with instances of AdjustedArray as inputs.</span>
+
+<span class="sd">        If term.windowed is falsey, its compute_from_baseline will be called</span>
+<span class="sd">        with instances of np.ndarray as inputs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">window_length</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NotSpecified</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_length</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="p">)</span>
+
+    <span class="nd">@lazyval</span>
+    <span class="k">def</span> <span class="nf">dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The number of extra rows needed for each of our inputs to compute this</span>
+<span class="sd">        term.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">extra_input_rows</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">term</span><span class="p">]</span> <span class="o">=</span> <span class="n">extra_input_rows</span>
+        <span class="n">out</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="nd">@expect_types</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">ndarray</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">postprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called with an result of ``self``, unravelled (i.e. 1-dimensional)</span>
+<span class="sd">        after any user-defined screens have been applied.</span>
+
+<span class="sd">        This is mostly useful for transforming the dtype of an output, e.g., to</span>
+<span class="sd">        convert a LabelArray into a pandas Categorical.</span>
+
+<span class="sd">        The default implementation is to just return data unchanged.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">to_workspace_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">assets</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called with a column of the result of a pipeline. This needs to put</span>
+<span class="sd">        the data into a format that can be used in a workspace to continue</span>
+<span class="sd">        doing computations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result : pd.Series</span>
+<span class="sd">            A multiindexed series with (dates, assets) whose values are the</span>
+<span class="sd">            results of running this pipeline term over the dates.</span>
+<span class="sd">        assets : pd.Index</span>
+<span class="sd">            All of the assets being requested. This allows us to correctly</span>
+<span class="sd">            shape the workspace value.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        workspace_value : array-like</span>
+<span class="sd">            An array like value that the engine can consume.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_value</span><span class="p">)</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span>
+            <span class="n">columns</span><span class="o">=</span><span class="n">assets</span><span class="p">,</span>
+            <span class="n">fill_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_value</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">values</span>
+
+    <span class="nd">@expect_downsample_frequency</span>
+    <span class="nd">@templated_docstring</span><span class="p">(</span><span class="n">frequency</span><span class="o">=</span><span class="n">PIPELINE_DOWNSAMPLING_FREQUENCY_DOC</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">downsample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frequency</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a term that computes from ``self`` at lower-than-daily frequency.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        {frequency}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">.mixins</span> <span class="kn">import</span> <span class="n">DownsampledMixin</span>
+        <span class="n">downsampled_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_with_mixin</span><span class="p">(</span><span class="n">DownsampledMixin</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">downsampled_type</span><span class="p">(</span><span class="n">term</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">frequency</span><span class="o">=</span><span class="n">frequency</span><span class="p">)</span>
+
+    <span class="nd">@templated_docstring</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">PIPELINE_ALIAS_NAME_DOC</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">alias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a term from ``self`` that names the expression.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        {name}</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        aliased : Aliased</span>
+<span class="sd">            ``self`` with a name.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This is useful for giving a name to a numerical or boolean expression.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">.mixins</span> <span class="kn">import</span> <span class="n">AliasedMixin</span>
+        <span class="n">aliased_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_with_mixin</span><span class="p">(</span><span class="n">AliasedMixin</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">aliased_type</span><span class="p">(</span><span class="n">term</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">isnull</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A Filter producing True for values where this Factor has missing data.</span>
+
+<span class="sd">        Equivalent to self.isnan() when ``self.dtype`` is float64.</span>
+<span class="sd">        Otherwise equivalent to ``self.eq(self.missing_value)``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        filter : zipline.pipeline.Filter</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">bool_dtype</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;isnull() is not supported for Filters&quot;</span><span class="p">)</span>
+
+        <span class="kn">from</span> <span class="nn">.filters</span> <span class="kn">import</span> <span class="n">NullFilter</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">float64_dtype</span><span class="p">:</span>
+            <span class="c1"># Using isnan is more efficient when possible because we can fold</span>
+            <span class="c1"># the isnan computation with other NumExpr expressions.</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">isnan</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">NullFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">notnull</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A Filter producing True for values where this Factor has complete data.</span>
+
+<span class="sd">        Equivalent to ``~self.isnan()` when ``self.dtype`` is float64.</span>
+<span class="sd">        Otherwise equivalent to ``(self != self.missing_value)``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        filter : zipline.pipeline.Filter</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">bool_dtype</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;notnull() is not supported for Filters&quot;</span><span class="p">)</span>
+
+        <span class="kn">from</span> <span class="nn">.filters</span> <span class="kn">import</span> <span class="n">NotNullFilter</span>
+
+        <span class="k">return</span> <span class="n">NotNullFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fillna</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fill_value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new term that fills missing values of this term&#39;s output with</span>
+<span class="sd">        ``fill_value``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fill_value : zipline.pipeline.ComputableTerm, or object.</span>
+<span class="sd">            Object to use as replacement for missing values.</span>
+
+<span class="sd">            If a ComputableTerm (e.g. a Factor) is passed, that term&#39;s results</span>
+<span class="sd">            will be used as fill values.</span>
+
+<span class="sd">            If a scalar (e.g. a number) is passed, the scalar will be used as a</span>
+<span class="sd">            fill value.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        **Filling with a Scalar:**</span>
+
+<span class="sd">        Let ``f`` be a Factor which would produce the following output::</span>
+
+<span class="sd">                         AAPL   MSFT    MCD     BK</span>
+<span class="sd">            2017-03-13    1.0    NaN    3.0    4.0</span>
+<span class="sd">            2017-03-14    1.5    2.5    NaN    NaN</span>
+
+<span class="sd">        Then ``f.fillna(0)`` produces the following output::</span>
+
+<span class="sd">                         AAPL   MSFT    MCD     BK</span>
+<span class="sd">            2017-03-13    1.0    0.0    3.0    4.0</span>
+<span class="sd">            2017-03-14    1.5    2.5    0.0    0.0</span>
+
+<span class="sd">        **Filling with a Term:**</span>
+
+<span class="sd">        Let ``f`` be as above, and let ``g`` be another Factor which would</span>
+<span class="sd">        produce the following output::</span>
+
+<span class="sd">                         AAPL   MSFT    MCD     BK</span>
+<span class="sd">            2017-03-13   10.0   20.0   30.0   40.0</span>
+<span class="sd">            2017-03-14   15.0   25.0   35.0   45.0</span>
+
+<span class="sd">        Then, ``f.fillna(g)`` produces the following output::</span>
+
+<span class="sd">                         AAPL   MSFT    MCD     BK</span>
+<span class="sd">            2017-03-13    1.0   20.0    3.0    4.0</span>
+<span class="sd">            2017-03-14    1.5    2.5   35.0   45.0</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        filled : zipline.pipeline.ComputableTerm</span>
+<span class="sd">            A term computing the same results as ``self``, but with missing</span>
+<span class="sd">            values filled in using values from ``fill_value``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">bool_dtype</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;fillna() is not supported for Filters&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fill_value</span><span class="p">,</span> <span class="n">LoadableTerm</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Can&#39;t use expression </span><span class="si">{}</span><span class="s2"> as a fill value. Did you mean to &quot;</span>
+                <span class="s2">&quot;append &#39;.latest?&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fill_value</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fill_value</span><span class="p">,</span> <span class="n">ComputableTerm</span><span class="p">):</span>
+            <span class="n">if_false</span> <span class="o">=</span> <span class="n">fill_value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Assume we got a scalar value. Make sure it&#39;s compatible with our</span>
+            <span class="c1"># dtype.</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">fill_value</span> <span class="o">=</span> <span class="n">_coerce_to_dtype</span><span class="p">(</span><span class="n">fill_value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;Fill value </span><span class="si">{value!r}</span><span class="s2"> is not a valid choice &quot;</span>
+                    <span class="s2">&quot;for term </span><span class="si">{termname}</span><span class="s2"> with dtype </span><span class="si">{dtype}</span><span class="s2">.</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                    <span class="s2">&quot;Coercion attempt failed with: </span><span class="si">{error}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">termname</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                        <span class="n">value</span><span class="o">=</span><span class="n">fill_value</span><span class="p">,</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                        <span class="n">error</span><span class="o">=</span><span class="n">e</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="n">if_false</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constant_type</span><span class="p">(</span>
+                <span class="n">const</span><span class="o">=</span><span class="n">fill_value</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="n">missing_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_value</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">notnull</span><span class="p">()</span><span class="o">.</span><span class="n">if_else</span><span class="p">(</span><span class="n">if_true</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">if_false</span><span class="o">=</span><span class="n">if_false</span><span class="p">)</span>
+
+    <span class="nd">@classlazyval</span>
+    <span class="k">def</span> <span class="nf">_constant_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.mixins</span> <span class="kn">import</span> <span class="n">ConstantMixin</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_with_mixin</span><span class="p">(</span><span class="n">ConstantMixin</span><span class="p">)</span>
+
+    <span class="nd">@classlazyval</span>
+    <span class="k">def</span> <span class="nf">_if_else_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.mixins</span> <span class="kn">import</span> <span class="n">IfElseMixin</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_with_mixin</span><span class="p">(</span><span class="n">IfElseMixin</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s2">&quot;</span><span class="si">{type}</span><span class="s2">([</span><span class="si">{inputs}</span><span class="s2">], </span><span class="si">{window_length}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">recursive_repr</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">),</span>
+            <span class="n">window_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_length</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">recursive_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s1">&#39;(...)&#39;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_with_mixin</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">mixin_type</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">mixin_type</span><span class="o">.</span><span class="n">universal_mixin_specialization</span><span class="p">(</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">_principal_computable_term_type</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">validate_dtype</span><span class="p">(</span><span class="n">termname</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">missing_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate a `dtype` and `missing_value` passed to Term.__new__.</span>
+
+<span class="sd">    Ensures that we know how to represent ``dtype``, and that missing_value</span>
+<span class="sd">    is specified for types without default missing values.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    validated_dtype, validated_missing_value : np.dtype, any</span>
+<span class="sd">        The dtype and missing_value to use for the new term.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    DTypeNotSpecified</span>
+<span class="sd">        When no dtype was passed to the instance, and the class doesn&#39;t</span>
+<span class="sd">        provide a default.</span>
+<span class="sd">    NotDType</span>
+<span class="sd">        When either the class or the instance provides a value not</span>
+<span class="sd">        coercible to a numpy dtype.</span>
+<span class="sd">    NoDefaultMissingValue</span>
+<span class="sd">        When dtype requires an explicit missing_value, but</span>
+<span class="sd">        ``missing_value`` is NotSpecified.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DTypeNotSpecified</span><span class="p">(</span><span class="n">termname</span><span class="o">=</span><span class="n">termname</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype_class</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">NotDType</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">termname</span><span class="o">=</span><span class="n">termname</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">can_represent_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">UnsupportedDType</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">termname</span><span class="o">=</span><span class="n">termname</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">missing_value</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+        <span class="n">missing_value</span> <span class="o">=</span> <span class="n">default_missing_value_for_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">_coerce_to_dtype</span><span class="p">(</span><span class="n">missing_value</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;Missing value </span><span class="si">{value!r}</span><span class="s2"> is not a valid choice &quot;</span>
+            <span class="s2">&quot;for term </span><span class="si">{termname}</span><span class="s2"> with dtype </span><span class="si">{dtype}</span><span class="s2">.</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Coercion attempt failed with: </span><span class="si">{error}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">termname</span><span class="o">=</span><span class="n">termname</span><span class="p">,</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">missing_value</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="n">error</span><span class="o">=</span><span class="n">e</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">missing_value</span>
+
+
+<span class="k">def</span> <span class="nf">_assert_valid_categorical_missing_value</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check that value is a valid categorical missing_value.</span>
+
+<span class="sd">    Raises a TypeError if the value is cannot be used as the missing_value for</span>
+<span class="sd">    a categorical_dtype Term.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">label_types</span> <span class="o">=</span> <span class="n">LabelArray</span><span class="o">.</span><span class="n">SUPPORTED_SCALAR_TYPES</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">label_types</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;String-dtype classifiers can only produce strings or None.&quot;</span>
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">types</span><span class="o">=</span><span class="s1">&#39; or &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">label_types</span><span class="p">]))</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_coerce_to_dtype</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">categorical_dtype</span><span class="p">:</span>
+        <span class="c1"># This check is necessary because we use object dtype for</span>
+        <span class="c1"># categoricals, and numpy will allow us to promote numerical</span>
+        <span class="c1"># values to object even though we don&#39;t support them.</span>
+        <span class="n">_assert_valid_categorical_missing_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># For any other type, cast using the same rules as numpy&#39;s astype</span>
+        <span class="c1"># function with casting=&#39;same_kind&#39;.</span>
+        <span class="c1">#</span>
+        <span class="c1"># &#39;same_kind&#39; allows casting between things like float32 and float64,</span>
+        <span class="c1"># but not between str and int. Note that the name is somewhat</span>
+        <span class="c1"># misleading, since it does allow conversion between different dtype</span>
+        <span class="c1"># kinds in some cases. In particular, conversion from int to float is</span>
+        <span class="c1"># allowed.</span>
+        <span class="k">return</span> <span class="n">array</span><span class="p">([</span><span class="n">value</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">casting</span><span class="o">=</span><span class="s1">&#39;same_kind&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2020, Quantopian Inc..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

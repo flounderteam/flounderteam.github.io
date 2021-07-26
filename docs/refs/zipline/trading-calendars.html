@@ -1,0 +1,395 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Trading Calendars &mdash; Zipline 1.4.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Risk and Performance Metrics" href="risk-and-perf-metrics.html" />
+    <link rel="prev" title="Data Bundles" href="bundles.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Zipline
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="beginner-tutorial.html">Zipline Beginner Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bundles.html">Data Bundles</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Trading Calendars</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#what-is-a-trading-calendar">What is a Trading Calendar?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#why-should-you-care-about-trading-calendars">Why Should You Care About Trading Calendars?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-tradingcalendar-class">The TradingCalendar Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-a-custom-trading-calendar">Building a Custom Trading Calendar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conclusions">Conclusions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="risk-and-perf-metrics.html">Risk and Performance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development-guidelines.html">Development Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendix.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release-process.html">Release Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Release Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Zipline</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Trading Calendars</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/trading-calendars.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="trading-calendars">
+<h1>Trading Calendars<a class="headerlink" href="#trading-calendars" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="what-is-a-trading-calendar">
+<h2>What is a Trading Calendar?<a class="headerlink" href="#what-is-a-trading-calendar" title="Permalink to this headline">¶</a></h2>
+<p>A trading calendar represents the timing information of a single market exchange. The timing information is made up of two parts: sessions, and opens/closes. This is represented by the Zipline <code class="xref py py-class docutils literal notranslate"><span class="pre">TradingCalendar</span></code> class, and is used as the parent class for all new <code class="docutils literal notranslate"><span class="pre">TradingCalendar</span></code> s.</p>
+<p>A session represents a contiguous set of minutes, and has a label that is midnight UTC. It is important to note that a session label should not be considered a specific point in time, and that midnight UTC is just being used for convenience.</p>
+<p>For an average day of the <a class="reference external" href="https://www.nyse.com/index">New York Stock Exchange</a>, the market opens at 9:30AM and closes at 4PM. Trading sessions can change depending on the exchange, day of the year, etc.</p>
+</div>
+<div class="section" id="why-should-you-care-about-trading-calendars">
+<h2>Why Should You Care About Trading Calendars?<a class="headerlink" href="#why-should-you-care-about-trading-calendars" title="Permalink to this headline">¶</a></h2>
+<p>Let’s say you want to buy a share of some equity on Tuesday, and then sell it on Saturday. If the exchange in which you’re trading that equity is not open on Saturday, then in reality it would not be possible to trade that equity at that time, and you would have to wait until some other number of days past Saturday. Since you wouldn’t be able to place the trade in reality, it would also be unreasonable for your backtest to place a trade on Saturday.</p>
+<p>In order for you to backtest your strategy, the dates in that are accounted for in your <a class="reference external" href="https://www.zipline.io/bundles.html">data bundle</a> and the dates in your <code class="docutils literal notranslate"><span class="pre">TradingCalendar</span></code> should match up; if the dates don’t match up, then you you’re going to see some errors along the way. This holds for both minutely and daily data.</p>
+</div>
+<div class="section" id="the-tradingcalendar-class">
+<h2>The TradingCalendar Class<a class="headerlink" href="#the-tradingcalendar-class" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">TradingCalendar</span></code> class has many properties we should be thinking about if we were to build our own <code class="docutils literal notranslate"><span class="pre">TradingCalendar</span></code> for an exchange. These include properties such as:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Name of the Exchange</p></li>
+<li><p>Timezone</p></li>
+<li><p>Open Time</p></li>
+<li><p>Close Time</p></li>
+<li><p>Regular &amp; Ad hoc Holidays</p></li>
+<li><p>Special Opens &amp; Closes</p></li>
+</ul>
+</div></blockquote>
+<p>And several others. If you’d like to see all of the properties and methods available to you through the <code class="docutils literal notranslate"><span class="pre">TradingCalendar</span></code> API, please take a look at the <a class="reference external" href="https://www.zipline.io/appendix.html#trading-calendar-api">API Reference</a></p>
+<p>Now we’ll take a look at the London Stock Exchange Calendar <code class="xref py py-class docutils literal notranslate"><span class="pre">LSEExchangeCalendar</span></code> as an example below:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">LSEExchangeCalendar</span><span class="p">(</span><span class="n">TradingCalendar</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Exchange calendar for the London Stock Exchange</span>
+
+<span class="sd">  Open Time: 8:00 AM, GMT</span>
+<span class="sd">  Close Time: 4:30 PM, GMT</span>
+
+<span class="sd">  Regularly-Observed Holidays:</span>
+<span class="sd">    - New Years Day (observed on first business day on/after)</span>
+<span class="sd">    - Good Friday</span>
+<span class="sd">    - Easter Monday</span>
+<span class="sd">    - Early May Bank Holiday (first Monday in May)</span>
+<span class="sd">    - Spring Bank Holiday (last Monday in May)</span>
+<span class="sd">    - Summer Bank Holiday (last Monday in May)</span>
+<span class="sd">    - Christmas Day</span>
+<span class="sd">    - Dec. 27th (if Christmas is on a weekend)</span>
+<span class="sd">    - Boxing Day</span>
+<span class="sd">    - Dec. 28th (if Boxing Day is on a weekend)</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s2">&quot;LSE&quot;</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">tz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">timezone</span><span class="p">(</span><span class="s1">&#39;Europe/London&#39;</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">open_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">time</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">close_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">time</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">regular_holidays</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">HolidayCalendar</span><span class="p">([</span>
+      <span class="n">LSENewYearsDay</span><span class="p">,</span>
+      <span class="n">GoodFriday</span><span class="p">,</span>
+      <span class="n">EasterMonday</span><span class="p">,</span>
+      <span class="n">MayBank</span><span class="p">,</span>
+      <span class="n">SpringBank</span><span class="p">,</span>
+      <span class="n">SummerBank</span><span class="p">,</span>
+      <span class="n">Christmas</span><span class="p">,</span>
+      <span class="n">WeekendChristmas</span><span class="p">,</span>
+      <span class="n">BoxingDay</span><span class="p">,</span>
+      <span class="n">WeekendBoxingDay</span>
+    <span class="p">])</span>
+</pre></div>
+</div>
+<p>You can create the <code class="docutils literal notranslate"><span class="pre">Holiday</span></code> objects mentioned in <code class="docutils literal notranslate"><span class="pre">def</span> <span class="pre">regular_holidays(self)`</span> <span class="pre">through</span> <span class="pre">the</span> <span class="pre">`pandas</span> <span class="pre">&lt;https://pandas.pydata.org/pandas-docs/stable/&gt;`__</span> <span class="pre">module,</span> <span class="pre">``pandas.tseries.holiday.Holiday</span></code>, and also take a look at the <a class="reference external" href="https://github.com/quantopian/zipline/blob/master/zipline/utils/calendars/exchange_calendar_lse.py">LSEExchangeCalendar</a> code as an example, or take a look at the code snippet below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pandas.tseries.holiday</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Holiday</span><span class="p">,</span>
+    <span class="n">DateOffset</span><span class="p">,</span>
+    <span class="n">MO</span>
+<span class="p">)</span>
+
+<span class="n">SomeSpecialDay</span> <span class="o">=</span> <span class="n">Holiday</span><span class="p">(</span>
+    <span class="s2">&quot;Some Special Day&quot;</span><span class="p">,</span>
+    <span class="n">month</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">day</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+    <span class="n">offset</span><span class="o">=</span><span class="n">DateOffSet</span><span class="p">(</span><span class="n">weekday</span><span class="o">=</span><span class="n">MO</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="building-a-custom-trading-calendar">
+<h2>Building a Custom Trading Calendar<a class="headerlink" href="#building-a-custom-trading-calendar" title="Permalink to this headline">¶</a></h2>
+<p>Now we’ll build our own custom trading calendar. This calendar will be used for trading assets that can be traded on a 24/7 exchange calendar. This means that it will be open on Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, and Sunday, and the exchange will open at 12AM and close at 11:59PM. The timezone which we’ll use is UTC.</p>
+<p>First we’ll start off by importing some modules that will be useful to us.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># for setting our open and close times</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">time</span>
+<span class="c1"># for setting our start and end sessions</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="c1"># for setting which days of the week we trade on</span>
+<span class="kn">from</span> <span class="nn">pandas.tseries.offsets</span> <span class="kn">import</span> <span class="n">CustomBusinessDay</span>
+<span class="c1"># for setting our timezone</span>
+<span class="kn">from</span> <span class="nn">pytz</span> <span class="kn">import</span> <span class="n">timezone</span>
+
+<span class="c1"># for creating and registering our calendar</span>
+<span class="kn">from</span> <span class="nn">trading_calendars</span> <span class="kn">import</span> <span class="n">register_calendar</span><span class="p">,</span> <span class="n">TradingCalendar</span>
+<span class="kn">from</span> <span class="nn">zipline.utils.memoize</span> <span class="kn">import</span> <span class="n">lazyval</span>
+</pre></div>
+</div>
+<p>And now we’ll actually build this calendar, which we’ll call <code class="docutils literal notranslate"><span class="pre">TFSExchangeCalendar</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TFSExchangeCalendar</span><span class="p">(</span><span class="n">TradingCalendar</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  An exchange calendar for trading assets 24/7.</span>
+
+<span class="sd">  Open Time: 12AM, UTC</span>
+<span class="sd">  Close Time: 11:59PM, UTC</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The name of the exchange, which Zipline will look for</span>
+<span class="sd">    when we run our algorithm and pass TFS to</span>
+<span class="sd">    the --trading-calendar CLI flag.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;TFS&quot;</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">tz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The timezone in which we&#39;ll be running our algorithm.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">timezone</span><span class="p">(</span><span class="s2">&quot;UTC&quot;</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">open_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The time in which our exchange will open each day.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">time</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">close_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The time in which our exchange will close each day.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">time</span><span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">59</span><span class="p">)</span>
+
+  <span class="nd">@lazyval</span>
+  <span class="k">def</span> <span class="nf">day</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The days on which our exchange will be open.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">weekmask</span> <span class="o">=</span> <span class="s2">&quot;Mon Tue Wed Thu Fri Sat Sun&quot;</span>
+    <span class="k">return</span> <span class="n">CustomBusinessDay</span><span class="p">(</span>
+      <span class="n">weekmask</span><span class="o">=</span><span class="n">weekmask</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="conclusions">
+<h2>Conclusions<a class="headerlink" href="#conclusions" title="Permalink to this headline">¶</a></h2>
+<p>In order for you to run your algorithm with this calendar, you’ll need have a data bundle in which your assets have dates that run through all days of the week. You can read about how to make your own data bundle in the <a class="reference external" href="https://www.zipline.io/bundles.html#writing-a-new-bundle">Writing a New Bundle</a> documentation, or use the <a class="reference external" href="https://github.com/quantopian/zipline/blob/master/zipline/data/bundles/csvdir.py">csvdir bundle</a> for creating a bundle from CSV files.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="risk-and-perf-metrics.html" class="btn btn-neutral float-right" title="Risk and Performance Metrics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="bundles.html" class="btn btn-neutral float-left" title="Data Bundles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2020, Quantopian Inc..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

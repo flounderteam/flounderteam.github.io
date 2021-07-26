@@ -1,0 +1,604 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>zipline.finance.blotter.simulation_blotter &mdash; Zipline 1.4.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Zipline
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../beginner-tutorial.html">Zipline Beginner Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bundles.html">Data Bundles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../trading-calendars.html">Trading Calendars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../risk-and-perf-metrics.html">Risk and Performance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development-guidelines.html">Development Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../appendix.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release-process.html">Release Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../releases.html">Release Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Zipline</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>zipline.finance.blotter.simulation_blotter</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for zipline.finance.blotter.simulation_blotter</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright 2015 Quantopian, Inc.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="kn">from</span> <span class="nn">logbook</span> <span class="kn">import</span> <span class="n">Logger</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+
+<span class="kn">from</span> <span class="nn">six</span> <span class="kn">import</span> <span class="n">iteritems</span>
+
+<span class="kn">from</span> <span class="nn">zipline.assets</span> <span class="kn">import</span> <span class="n">Equity</span><span class="p">,</span> <span class="n">Future</span><span class="p">,</span> <span class="n">Asset</span>
+<span class="kn">from</span> <span class="nn">.blotter</span> <span class="kn">import</span> <span class="n">Blotter</span>
+<span class="kn">from</span> <span class="nn">zipline.extensions</span> <span class="kn">import</span> <span class="n">register</span>
+<span class="kn">from</span> <span class="nn">zipline.finance.order</span> <span class="kn">import</span> <span class="n">Order</span>
+<span class="kn">from</span> <span class="nn">zipline.finance.slippage</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DEFAULT_FUTURE_VOLUME_SLIPPAGE_BAR_LIMIT</span><span class="p">,</span>
+    <span class="n">VolatilityVolumeShare</span><span class="p">,</span>
+    <span class="n">FixedBasisPointsSlippage</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">zipline.finance.commission</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DEFAULT_PER_CONTRACT_COST</span><span class="p">,</span>
+    <span class="n">FUTURE_EXCHANGE_FEES_BY_SYMBOL</span><span class="p">,</span>
+    <span class="n">PerContract</span><span class="p">,</span>
+    <span class="n">PerShare</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">zipline.utils.input_validation</span> <span class="kn">import</span> <span class="n">expect_types</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">Logger</span><span class="p">(</span><span class="s1">&#39;Blotter&#39;</span><span class="p">)</span>
+<span class="n">warning_logger</span> <span class="o">=</span> <span class="n">Logger</span><span class="p">(</span><span class="s1">&#39;AlgoWarning&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SimulationBlotter"><a class="viewcode-back" href="../../../../appendix.html#zipline.finance.blotter.SimulationBlotter">[docs]</a><span class="nd">@register</span><span class="p">(</span><span class="n">Blotter</span><span class="p">,</span> <span class="s1">&#39;default&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SimulationBlotter</span><span class="p">(</span><span class="n">Blotter</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">equity_slippage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">future_slippage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">equity_commission</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">future_commission</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">cancel_policy</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SimulationBlotter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">cancel_policy</span><span class="o">=</span><span class="n">cancel_policy</span><span class="p">)</span>
+
+        <span class="c1"># these orders are aggregated by asset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+        <span class="c1"># keep a dict of orders by their own id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orders</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># holding orders that have come in since the last event.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_orders</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_shares</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">1e+11</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">slippage_models</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">Equity</span><span class="p">:</span> <span class="n">equity_slippage</span> <span class="ow">or</span> <span class="n">FixedBasisPointsSlippage</span><span class="p">(),</span>
+            <span class="n">Future</span><span class="p">:</span> <span class="n">future_slippage</span> <span class="ow">or</span> <span class="n">VolatilityVolumeShare</span><span class="p">(</span>
+                <span class="n">volume_limit</span><span class="o">=</span><span class="n">DEFAULT_FUTURE_VOLUME_SLIPPAGE_BAR_LIMIT</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">commission_models</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">Equity</span><span class="p">:</span> <span class="n">equity_commission</span> <span class="ow">or</span> <span class="n">PerShare</span><span class="p">(),</span>
+            <span class="n">Future</span><span class="p">:</span> <span class="n">future_commission</span> <span class="ow">or</span> <span class="n">PerContract</span><span class="p">(</span>
+                <span class="n">cost</span><span class="o">=</span><span class="n">DEFAULT_PER_CONTRACT_COST</span><span class="p">,</span>
+                <span class="n">exchange_fee</span><span class="o">=</span><span class="n">FUTURE_EXCHANGE_FEES_BY_SYMBOL</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="si">{class_name}</span><span class="s2">(</span>
+<span class="s2">    slippage_models=</span><span class="si">{slippage_models}</span><span class="s2">,</span>
+<span class="s2">    commission_models=</span><span class="si">{commission_models}</span><span class="s2">,</span>
+<span class="s2">    open_orders=</span><span class="si">{open_orders}</span><span class="s2">,</span>
+<span class="s2">    orders=</span><span class="si">{orders}</span><span class="s2">,</span>
+<span class="s2">    new_orders=</span><span class="si">{new_orders}</span><span class="s2">,</span>
+<span class="s2">    current_dt=</span><span class="si">{current_dt}</span><span class="s2">)</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">class_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                   <span class="n">slippage_models</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">slippage_models</span><span class="p">,</span>
+                   <span class="n">commission_models</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">commission_models</span><span class="p">,</span>
+                   <span class="n">open_orders</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span><span class="p">,</span>
+                   <span class="n">orders</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">orders</span><span class="p">,</span>
+                   <span class="n">new_orders</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">new_orders</span><span class="p">,</span>
+                   <span class="n">current_dt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_dt</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SimulationBlotter.order"><a class="viewcode-back" href="../../../../appendix.html#zipline.finance.blotter.SimulationBlotter.order">[docs]</a>    <span class="nd">@expect_types</span><span class="p">(</span><span class="n">asset</span><span class="o">=</span><span class="n">Asset</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asset</span><span class="p">,</span> <span class="n">amount</span><span class="p">,</span> <span class="n">style</span><span class="p">,</span> <span class="n">order_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Place an order.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        asset : zipline.assets.Asset</span>
+<span class="sd">            The asset that this order is for.</span>
+<span class="sd">        amount : int</span>
+<span class="sd">            The amount of shares to order. If ``amount`` is positive, this is</span>
+<span class="sd">            the number of shares to buy or cover. If ``amount`` is negative,</span>
+<span class="sd">            this is the number of shares to sell or short.</span>
+<span class="sd">        style : zipline.finance.execution.ExecutionStyle</span>
+<span class="sd">            The execution style for the order.</span>
+<span class="sd">        order_id : str, optional</span>
+<span class="sd">            The unique identifier for this order.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        order_id : str or None</span>
+<span class="sd">            The unique identifier for this order, or None if no order was</span>
+<span class="sd">            placed.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        amount &gt; 0 :: Buy/Cover</span>
+<span class="sd">        amount &lt; 0 :: Sell/Short</span>
+<span class="sd">        Market order:    order(asset, amount)</span>
+<span class="sd">        Limit order:     order(asset, amount, style=LimitOrder(limit_price))</span>
+<span class="sd">        Stop order:      order(asset, amount, style=StopOrder(stop_price))</span>
+<span class="sd">        StopLimit order: order(asset, amount, style=StopLimitOrder(limit_price,</span>
+<span class="sd">                               stop_price))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># something could be done with amount to further divide</span>
+        <span class="c1"># between buy by share count OR buy shares up to a dollar amount</span>
+        <span class="c1"># numeric == share count  AND  &quot;$dollar.cents&quot; == cost amount</span>
+
+        <span class="k">if</span> <span class="n">amount</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Don&#39;t bother placing orders for 0 shares.</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="n">amount</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_shares</span><span class="p">:</span>
+            <span class="c1"># Arbitrary limit of 100 billion (US) shares will never be</span>
+            <span class="c1"># exceeded except by a buggy algorithm.</span>
+            <span class="k">raise</span> <span class="ne">OverflowError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t order more than </span><span class="si">%d</span><span class="s2"> shares&quot;</span> <span class="o">%</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">max_shares</span><span class="p">)</span>
+
+        <span class="n">is_buy</span> <span class="o">=</span> <span class="p">(</span><span class="n">amount</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">Order</span><span class="p">(</span>
+            <span class="n">dt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_dt</span><span class="p">,</span>
+            <span class="n">asset</span><span class="o">=</span><span class="n">asset</span><span class="p">,</span>
+            <span class="n">amount</span><span class="o">=</span><span class="n">amount</span><span class="p">,</span>
+            <span class="n">stop</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">get_stop_price</span><span class="p">(</span><span class="n">is_buy</span><span class="p">),</span>
+            <span class="n">limit</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">get_limit_price</span><span class="p">(</span><span class="n">is_buy</span><span class="p">),</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">order_id</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span><span class="p">[</span><span class="n">order</span><span class="o">.</span><span class="n">asset</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orders</span><span class="p">[</span><span class="n">order</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">order</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_orders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">order</span><span class="o">.</span><span class="n">id</span></div>
+
+<div class="viewcode-block" id="SimulationBlotter.cancel"><a class="viewcode-back" href="../../../../appendix.html#zipline.finance.blotter.SimulationBlotter.cancel">[docs]</a>    <span class="k">def</span> <span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order_id</span><span class="p">,</span> <span class="n">relay_status</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">order_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">orders</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">cur_order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">orders</span><span class="p">[</span><span class="n">order_id</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">cur_order</span><span class="o">.</span><span class="n">open</span><span class="p">:</span>
+            <span class="n">order_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span><span class="p">[</span><span class="n">cur_order</span><span class="o">.</span><span class="n">asset</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">cur_order</span> <span class="ow">in</span> <span class="n">order_list</span><span class="p">:</span>
+                <span class="n">order_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">cur_order</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">cur_order</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_orders</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">new_orders</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">cur_order</span><span class="p">)</span>
+            <span class="n">cur_order</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+            <span class="n">cur_order</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_dt</span>
+
+            <span class="k">if</span> <span class="n">relay_status</span><span class="p">:</span>
+                <span class="c1"># we want this order&#39;s new status to be relayed out</span>
+                <span class="c1"># along with newly placed orders.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">new_orders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cur_order</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SimulationBlotter.cancel_all_orders_for_asset"><a class="viewcode-back" href="../../../../appendix.html#zipline.finance.blotter.SimulationBlotter.cancel_all_orders_for_asset">[docs]</a>    <span class="k">def</span> <span class="nf">cancel_all_orders_for_asset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asset</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">relay_status</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Cancel all open orders for a given asset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># (sadly) open_orders is a defaultdict, so this will always succeed.</span>
+        <span class="n">orders</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span>
+
+        <span class="c1"># We&#39;re making a copy here because `cancel` mutates the list of open</span>
+        <span class="c1"># orders in place.  The right thing to do here would be to make</span>
+        <span class="c1"># self.open_orders no longer a defaultdict.  If we do that, then we</span>
+        <span class="c1"># should just remove the orders once here and be done with the matter.</span>
+        <span class="k">for</span> <span class="n">order</span> <span class="ow">in</span> <span class="n">orders</span><span class="p">[:]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cancel</span><span class="p">(</span><span class="n">order</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">relay_status</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">warn</span><span class="p">:</span>
+                <span class="c1"># Message appropriately depending on whether there&#39;s</span>
+                <span class="c1"># been a partial fill or not.</span>
+                <span class="k">if</span> <span class="n">order</span><span class="o">.</span><span class="n">filled</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">warning_logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                        <span class="s1">&#39;Your order for </span><span class="si">{order_amt}</span><span class="s1"> shares of &#39;</span>
+                        <span class="s1">&#39;</span><span class="si">{order_sym}</span><span class="s1"> has been partially filled. &#39;</span>
+                        <span class="s1">&#39;</span><span class="si">{order_filled}</span><span class="s1"> shares were successfully &#39;</span>
+                        <span class="s1">&#39;purchased. </span><span class="si">{order_failed}</span><span class="s1"> shares were not &#39;</span>
+                        <span class="s1">&#39;filled by the end of day and &#39;</span>
+                        <span class="s1">&#39;were canceled.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">order_amt</span><span class="o">=</span><span class="n">order</span><span class="o">.</span><span class="n">amount</span><span class="p">,</span>
+                            <span class="n">order_sym</span><span class="o">=</span><span class="n">order</span><span class="o">.</span><span class="n">asset</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span>
+                            <span class="n">order_filled</span><span class="o">=</span><span class="n">order</span><span class="o">.</span><span class="n">filled</span><span class="p">,</span>
+                            <span class="n">order_failed</span><span class="o">=</span><span class="n">order</span><span class="o">.</span><span class="n">amount</span> <span class="o">-</span> <span class="n">order</span><span class="o">.</span><span class="n">filled</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="k">elif</span> <span class="n">order</span><span class="o">.</span><span class="n">filled</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">warning_logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                        <span class="s1">&#39;Your order for </span><span class="si">{order_amt}</span><span class="s1"> shares of &#39;</span>
+                        <span class="s1">&#39;</span><span class="si">{order_sym}</span><span class="s1"> has been partially filled. &#39;</span>
+                        <span class="s1">&#39;</span><span class="si">{order_filled}</span><span class="s1"> shares were successfully &#39;</span>
+                        <span class="s1">&#39;sold. </span><span class="si">{order_failed}</span><span class="s1"> shares were not &#39;</span>
+                        <span class="s1">&#39;filled by the end of day and &#39;</span>
+                        <span class="s1">&#39;were canceled.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">order_amt</span><span class="o">=</span><span class="n">order</span><span class="o">.</span><span class="n">amount</span><span class="p">,</span>
+                            <span class="n">order_sym</span><span class="o">=</span><span class="n">order</span><span class="o">.</span><span class="n">asset</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span>
+                            <span class="n">order_filled</span><span class="o">=-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">order</span><span class="o">.</span><span class="n">filled</span><span class="p">,</span>
+                            <span class="n">order_failed</span><span class="o">=-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">order</span><span class="o">.</span><span class="n">amount</span> <span class="o">-</span> <span class="n">order</span><span class="o">.</span><span class="n">filled</span><span class="p">),</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">warning_logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                        <span class="s1">&#39;Your order for </span><span class="si">{order_amt}</span><span class="s1"> shares of &#39;</span>
+                        <span class="s1">&#39;</span><span class="si">{order_sym}</span><span class="s1"> failed to fill by the end of day &#39;</span>
+                        <span class="s1">&#39;and was canceled.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">order_amt</span><span class="o">=</span><span class="n">order</span><span class="o">.</span><span class="n">amount</span><span class="p">,</span>
+                            <span class="n">order_sym</span><span class="o">=</span><span class="n">order</span><span class="o">.</span><span class="n">asset</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">orders</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">execute_cancel_policy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cancel_policy</span><span class="o">.</span><span class="n">should_cancel</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+            <span class="n">warn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cancel_policy</span><span class="o">.</span><span class="n">warn_on_cancel</span>
+            <span class="k">for</span> <span class="n">asset</span> <span class="ow">in</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cancel_all_orders_for_asset</span><span class="p">(</span><span class="n">asset</span><span class="p">,</span> <span class="n">warn</span><span class="p">,</span>
+                                                 <span class="n">relay_status</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SimulationBlotter.reject"><a class="viewcode-back" href="../../../../appendix.html#zipline.finance.blotter.SimulationBlotter.reject">[docs]</a>    <span class="k">def</span> <span class="nf">reject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order_id</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mark the given order as &#39;rejected&#39;, which is functionally similar to</span>
+<span class="sd">        cancelled. The distinction is that rejections are involuntary (and</span>
+<span class="sd">        usually include a message from a broker indicating why the order was</span>
+<span class="sd">        rejected) while cancels are typically user-driven.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">order_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">orders</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">cur_order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">orders</span><span class="p">[</span><span class="n">order_id</span><span class="p">]</span>
+
+        <span class="n">order_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span><span class="p">[</span><span class="n">cur_order</span><span class="o">.</span><span class="n">asset</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">cur_order</span> <span class="ow">in</span> <span class="n">order_list</span><span class="p">:</span>
+            <span class="n">order_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">cur_order</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cur_order</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_orders</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">new_orders</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">cur_order</span><span class="p">)</span>
+        <span class="n">cur_order</span><span class="o">.</span><span class="n">reject</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="n">reason</span><span class="p">)</span>
+        <span class="n">cur_order</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_dt</span>
+        <span class="c1"># we want this order&#39;s new status to be relayed out</span>
+        <span class="c1"># along with newly placed orders.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_orders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cur_order</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SimulationBlotter.hold"><a class="viewcode-back" href="../../../../appendix.html#zipline.finance.blotter.SimulationBlotter.hold">[docs]</a>    <span class="k">def</span> <span class="nf">hold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order_id</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mark the order with order_id as &#39;held&#39;. Held is functionally similar</span>
+<span class="sd">        to &#39;open&#39;. When a fill (full or partial) arrives, the status</span>
+<span class="sd">        will automatically change back to open/filled as necessary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">order_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">orders</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">cur_order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">orders</span><span class="p">[</span><span class="n">order_id</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">cur_order</span><span class="o">.</span><span class="n">open</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cur_order</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_orders</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">new_orders</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">cur_order</span><span class="p">)</span>
+            <span class="n">cur_order</span><span class="o">.</span><span class="n">hold</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="n">reason</span><span class="p">)</span>
+            <span class="n">cur_order</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_dt</span>
+            <span class="c1"># we want this order&#39;s new status to be relayed out</span>
+            <span class="c1"># along with newly placed orders.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">new_orders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cur_order</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SimulationBlotter.process_splits"><a class="viewcode-back" href="../../../../appendix.html#zipline.finance.blotter.SimulationBlotter.process_splits">[docs]</a>    <span class="k">def</span> <span class="nf">process_splits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">splits</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Processes a list of splits by modifying any open orders as needed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        splits: list</span>
+<span class="sd">            A list of splits.  Each split is a tuple of (asset, ratio).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">asset</span><span class="p">,</span> <span class="n">ratio</span> <span class="ow">in</span> <span class="n">splits</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">asset</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">orders_to_modify</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">order</span> <span class="ow">in</span> <span class="n">orders_to_modify</span><span class="p">:</span>
+                <span class="n">order</span><span class="o">.</span><span class="n">handle_split</span><span class="p">(</span><span class="n">ratio</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SimulationBlotter.get_transactions"><a class="viewcode-back" href="../../../../appendix.html#zipline.finance.blotter.SimulationBlotter.get_transactions">[docs]</a>    <span class="k">def</span> <span class="nf">get_transactions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bar_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a list of transactions based on the current open orders,</span>
+<span class="sd">        slippage model, and commission model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bar_data: zipline._protocol.BarData</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This method book-keeps the blotter&#39;s open_orders dictionary, so that</span>
+<span class="sd">         it is accurate by the time we&#39;re done processing open orders.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        transactions_list: List</span>
+<span class="sd">            transactions_list: list of transactions resulting from the current</span>
+<span class="sd">            open orders.  If there were no open orders, an empty list is</span>
+<span class="sd">            returned.</span>
+
+<span class="sd">        commissions_list: List</span>
+<span class="sd">            commissions_list: list of commissions resulting from filling the</span>
+<span class="sd">            open orders.  A commission is an object with &quot;asset&quot; and &quot;cost&quot;</span>
+<span class="sd">            parameters.</span>
+
+<span class="sd">        closed_orders: List</span>
+<span class="sd">            closed_orders: list of all the orders that have filled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">closed_orders</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">transactions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">commissions</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">asset</span><span class="p">,</span> <span class="n">asset_orders</span> <span class="ow">in</span> <span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span><span class="p">):</span>
+                <span class="n">slippage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slippage_models</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">asset</span><span class="p">)]</span>
+
+                <span class="k">for</span> <span class="n">order</span><span class="p">,</span> <span class="n">txn</span> <span class="ow">in</span> \
+                        <span class="n">slippage</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">bar_data</span><span class="p">,</span> <span class="n">asset</span><span class="p">,</span> <span class="n">asset_orders</span><span class="p">):</span>
+                    <span class="n">commission</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">commission_models</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">asset</span><span class="p">)]</span>
+                    <span class="n">additional_commission</span> <span class="o">=</span> <span class="n">commission</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">txn</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">additional_commission</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">commissions</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                            <span class="s2">&quot;asset&quot;</span><span class="p">:</span> <span class="n">order</span><span class="o">.</span><span class="n">asset</span><span class="p">,</span>
+                            <span class="s2">&quot;order&quot;</span><span class="p">:</span> <span class="n">order</span><span class="p">,</span>
+                            <span class="s2">&quot;cost&quot;</span><span class="p">:</span> <span class="n">additional_commission</span>
+                        <span class="p">})</span>
+
+                    <span class="n">order</span><span class="o">.</span><span class="n">filled</span> <span class="o">+=</span> <span class="n">txn</span><span class="o">.</span><span class="n">amount</span>
+                    <span class="n">order</span><span class="o">.</span><span class="n">commission</span> <span class="o">+=</span> <span class="n">additional_commission</span>
+
+                    <span class="n">order</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">txn</span><span class="o">.</span><span class="n">dt</span>
+
+                    <span class="n">transactions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">txn</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">order</span><span class="o">.</span><span class="n">open</span><span class="p">:</span>
+                        <span class="n">closed_orders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">transactions</span><span class="p">,</span> <span class="n">commissions</span><span class="p">,</span> <span class="n">closed_orders</span></div>
+
+<div class="viewcode-block" id="SimulationBlotter.prune_orders"><a class="viewcode-back" href="../../../../appendix.html#zipline.finance.blotter.SimulationBlotter.prune_orders">[docs]</a>    <span class="k">def</span> <span class="nf">prune_orders</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">closed_orders</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes all given orders from the blotter&#39;s open_orders list.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        closed_orders: iterable of orders that are closed.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># remove all closed orders from our open_orders dict</span>
+        <span class="k">for</span> <span class="n">order</span> <span class="ow">in</span> <span class="n">closed_orders</span><span class="p">:</span>
+            <span class="n">asset</span> <span class="o">=</span> <span class="n">order</span><span class="o">.</span><span class="n">asset</span>
+            <span class="n">asset_orders</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">asset_orders</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+        <span class="c1"># now clear out the assets from our open_orders dict that have</span>
+        <span class="c1"># zero open orders</span>
+        <span class="k">for</span> <span class="n">asset</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span><span class="p">[</span><span class="n">asset</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_orders</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2020, Quantopian Inc..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
