@@ -1,0 +1,357 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Building and Running Pipeline &mdash; flounderteam  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/clipboard.min.js"></script>
+        <script src="_static/copybutton.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contact Us" href="contactus.html" />
+    <link rel="prev" title="Installation" href="install.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> flounderteam
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Building and Running Pipeline</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#getting-pipeline-loaders">Getting Pipeline Loaders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#connecting-pipeline-engine-with-pipeline-loaders">Connecting Pipeline Engine with Pipeline Loaders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#selecting-pipeline-universe">Selecting Pipeline Universe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#defining-pipeline-custom-factors">Defining Pipeline Custom Factors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-pipeline">Building Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-pipeline">Running Pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contactus.html">Contact Us</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">flounderteam</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Building and Running Pipeline</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/running.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="building-and-running-pipeline">
+<h1>Building and Running Pipeline<a class="headerlink" href="#building-and-running-pipeline" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference external" href="https://flounderteam.github.io/refs/zipline/appendix.html#pipeline-api">Zipline pipeline framework</a>
+is designed as an optimal set of base classes (such as Pipeline Engine, Pipeline Loader, Factor, Pipeline)
+that can be
+independently extended for producing an open collection of custom composite
+applications. Then, building the pipeline represents a sequence of steps for
+selecting and connecting together appropriate pipeline components.</p>
+<div class="section" id="getting-pipeline-loaders">
+<h2>Getting Pipeline Loaders<a class="headerlink" href="#getting-pipeline-loaders" title="Permalink to this headline">¶</a></h2>
+<p>The first step is associated with the selection of data bundles and
+initialization of Pipeline Loaders.
+The <a class="reference external" href="https://flounderteam.github.io/fsharadar/">fsharadar</a>
+module supports several bundles, such as Sharadar US Equity Prices (SEP)
+and Daily Metrics of Core US Fundamental Data. According
+to Zipline, each bundle can be independently accessed from the BundleData
+instance that is retuned by the <em>load()</em> method provided by the corresponding
+submodule, <em>sep</em> or <em>daily</em>, respectively. Subsequently, the BundleData instances
+are used for initializing Pipeline Loaders.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fsharadar</span> <span class="kn">import</span> <span class="n">sep</span>
+<span class="kn">from</span> <span class="nn">fsharadar</span> <span class="kn">import</span> <span class="n">daily</span>
+
+<span class="n">sep_bundle_data</span> <span class="o">=</span> <span class="n">sep</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+<span class="n">daily_bundle_data</span> <span class="o">=</span> <span class="n">daily</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+
+<span class="n">sep_pipe_loader</span> <span class="o">=</span> <span class="n">fsharadar</span><span class="o">.</span><span class="n">get_pipeline_loader</span><span class="p">(</span><span class="n">sep_bundle_data</span><span class="p">)</span>
+<span class="n">daily_pipe_loader</span> <span class="o">=</span> <span class="n">fsharadar</span><span class="o">.</span><span class="n">get_pipeline_loader</span><span class="p">(</span><span class="n">daily_bundle_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="connecting-pipeline-engine-with-pipeline-loaders">
+<h2>Connecting Pipeline Engine with Pipeline Loaders<a class="headerlink" href="#connecting-pipeline-engine-with-pipeline-loaders" title="Permalink to this headline">¶</a></h2>
+<p>Th next step selects the appropriate
+PipelineEngine
+that propagates the Pipeline
+collection of cross-sectional tasks (Factors or Classifiers) through the backtest
+interval. The Zipline current version provides
+<a class="reference external" href="https://flounderteam.github.io/refs/zipline/appendix.html#zipline.pipeline.engine.SimplePipelineEngine">SimplePipelineEngine</a>
+that computes
+each task independently. The configuration of this engine requires the definition
+of <em>get_loader</em> function and <em>asset_finder</em>. The <em>get_loader</em> function servers as
+a dispatcher that returns the appropriate Pipeline Loader for retrieving raw data
+of selected characteristic.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">zipline.pipeline.engine</span> <span class="kn">import</span> <span class="n">SimplePipelineEngine</span>
+<span class="kn">from</span> <span class="nn">zipline.pipeline.data</span> <span class="kn">import</span> <span class="n">USEquityPricing</span>
+
+<span class="k">def</span> <span class="nf">get_pipe_loader</span><span class="p">(</span><span class="n">column</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">USEquityPricing</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sep_pipe_loader</span>
+    <span class="k">if</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">daily</span><span class="o">.</span><span class="n">Fundamentals</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">daily_pipe_loader</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No PipelineLoader registered for column </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">column</span><span class="p">)</span>
+
+<span class="n">engine</span> <span class="o">=</span> <span class="n">SimplePipelineEngine</span><span class="p">(</span>
+    <span class="n">get_loader</span><span class="o">=</span><span class="n">get_pipe_loader</span><span class="p">,</span>
+    <span class="n">asset_finder</span><span class="o">=</span><span class="n">sep_bundle_data</span><span class="o">.</span><span class="n">asset_finder</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="selecting-pipeline-universe">
+<h2>Selecting Pipeline Universe<a class="headerlink" href="#selecting-pipeline-universe" title="Permalink to this headline">¶</a></h2>
+<p>The pipeline universe defines a subset of stocks that meet a set of criteria. In Zipline, it can be implemented
+by combining and nesting multiple
+<a class="reference external" href="https://flounderteam.github.io/refs/zipline/appendix.html#zipline.pipeline.Filter">Filters</a>.
+Designed after the popular Quantopian version,  the <em>fsharadar</em> module provides the built-in TradableStocksUS
+universe that selects domestic common stocks with market cap bigger than $350 million, median daily dollar
+volume greater than or equal to 2.5 million over the trailing 200 days, and closing price higher than $5 per share.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fsharadar.universe</span> <span class="kn">import</span> <span class="n">TradableStocksUS</span>
+<span class="n">universe</span> <span class="o">=</span> <span class="n">TradableStocksUS</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="defining-pipeline-custom-factors">
+<h2>Defining Pipeline Custom Factors<a class="headerlink" href="#defining-pipeline-custom-factors" title="Permalink to this headline">¶</a></h2>
+<p>The pipeline task represents the computation of stock charecteristics within the trailing windows.
+Some of the more popular computations (such as average, winsorize, zscore) are implemented
+as Zipline built-in factors. This collection of common factors can be further
+extended by specializing the
+<a class="reference external" href="https://flounderteam.github.io/refs/zipline/appendix.html#zipline.pipeline.CustomFactor">CustomFactor</a> class.
+The code snippet below shows
+the implementation of the conventional momentum factor computed by ranking stocks according
+to their prior behavior over the course of 11 months with a 1 month lag.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">zipline.pipeline.factors</span> <span class="kn">import</span> <span class="n">CustomFactor</span>
+<span class="kn">from</span> <span class="nn">zipline.pipeline.data</span> <span class="kn">import</span> <span class="n">USEquityPricing</span>
+
+<span class="n">wl</span> <span class="o">=</span> <span class="mi">252</span>
+<span class="k">class</span> <span class="nc">Momentum</span><span class="p">(</span><span class="n">CustomFactor</span><span class="p">):</span>
+
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">USEquityPricing</span><span class="o">.</span><span class="n">close</span><span class="p">]</span>
+    <span class="n">window_length</span> <span class="o">=</span> <span class="n">wl</span>
+
+    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">today</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">prices</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">prices</span><span class="p">[</span><span class="o">-</span><span class="mi">21</span><span class="p">]</span> <span class="o">-</span> <span class="n">prices</span><span class="p">[</span><span class="o">-</span><span class="n">wl</span><span class="p">])</span><span class="o">/</span><span class="n">prices</span><span class="p">[</span><span class="o">-</span><span class="n">wl</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="building-pipeline">
+<h2>Building Pipeline<a class="headerlink" href="#building-pipeline" title="Permalink to this headline">¶</a></h2>
+<p>Finally, application-related built-in and custom computations can be combined together
+within a single
+<a class="reference external" href="https://flounderteam.github.io/refs/zipline/appendix.html#pipeline-api">Pipeline</a>.
+The code snippet below shows a practical example used in Uncovering
+Momentum studies
+that explicitly explained the source of the momentum premium via high volatility growth stocks.
+Specifically, the following pipeline includes two custom factors, Momentum (mom) and Realized
+Volatility (rv), one built-in factor <em>cap</em> with market values for stocks, and a built-in classifier
+<em>pb_quartile</em> computing quartiles based on stock price-to-book ratio.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">zipline.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span>
+<span class="kn">from</span> <span class="nn">zipline.pipeline.factors</span> <span class="kn">import</span> <span class="n">Latest</span>
+
+<span class="k">def</span> <span class="nf">make_pipeline</span><span class="p">():</span>
+    <span class="n">pipe</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">()</span>
+    <span class="n">pipe</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Momentum</span><span class="p">(</span><span class="n">mask</span><span class="o">=</span><span class="n">universe</span><span class="p">),</span> <span class="s2">&quot;mom&quot;</span><span class="p">)</span>
+    <span class="n">pipe</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">RealizedVolatility</span><span class="p">(</span><span class="n">mask</span><span class="o">=</span><span class="n">universe</span><span class="p">),</span> <span class="s2">&quot;rv&quot;</span><span class="p">)</span>
+    <span class="n">pipe</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Latest</span><span class="p">([</span><span class="n">daily</span><span class="o">.</span><span class="n">Fundamentals</span><span class="o">.</span><span class="n">marketcap</span><span class="p">],</span> <span class="n">mask</span><span class="o">=</span><span class="n">universe</span><span class="p">),</span> <span class="s1">&#39;cap&#39;</span><span class="p">)</span>
+    <span class="n">pipe</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">daily</span><span class="o">.</span><span class="n">Fundamentals</span><span class="o">.</span><span class="n">pb</span><span class="o">.</span><span class="n">latest</span><span class="o">.</span><span class="n">quartiles</span><span class="p">(</span><span class="n">mask</span><span class="o">=</span><span class="n">universe</span><span class="p">),</span> <span class="s2">&quot;pb_quartile&quot;</span><span class="p">)</span>
+
+    <span class="n">pipe</span><span class="o">.</span><span class="n">set_screen</span><span class="p">(</span><span class="n">universe</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pipe</span>
+
+<span class="n">pipe</span> <span class="o">=</span> <span class="n">make_pipeline</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="running-pipeline">
+<h2>Running Pipeline<a class="headerlink" href="#running-pipeline" title="Permalink to this headline">¶</a></h2>
+<p>Pipeline is run within the pipeline engine by calling the corresponding
+method and specifying timestamps of start_date and end_date:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pipe_df</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">run_pipeline</span><span class="p">(</span><span class="n">pipe</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The method returns the two-index (date-asset) dataframe with columns
+corresponding to pipeline entries.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="contactus.html" class="btn btn-neutral float-right" title="Contact Us" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="install.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Flounder Team.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
