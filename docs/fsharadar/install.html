@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Installation &mdash; fsharadar 0.2.0 documentation</title>
+  <title>Installation &mdash; fsharadar 0.3.0 documentation</title>
   
 
   
@@ -45,7 +45,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Ingesting Sharadar Files" href="ingest.html" />
-    <link rel="prev" title="Platform Overview" href="intro.html" /> 
+    <link rel="prev" title="Flounder Zipline-Sharadar Interface" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -69,7 +69,7 @@
             
             
               <div class="version">
-                0.2.0
+                0.3.0
               </div>
             
           
@@ -95,13 +95,10 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Platform Overview</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ingest.html">Ingesting Sharadar Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="building.html">Building Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running.html">Running Pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="release-history.html">Release History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contactus.html">Contact Us</a></li>
 </ul>
 
@@ -172,8 +169,12 @@
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>The fsharadar module can be installed with a pip command as:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install cython fsharadar
+<p>The fsharadar module can be installed from basic conda with the following steps:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ conda create --name flounder python=3.6
+$ conda activate flounder
+$ conda install numpy
+$ conda install cython
+$ pip install fsharadar
 </pre></div>
 </div>
 <p>The installtion setup also includes dependencies on the primary platform
@@ -190,7 +191,7 @@ the entire Zipline-based research platform.</p>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
         <a href="ingest.html" class="btn btn-neutral float-right" title="Ingesting Sharadar Files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="intro.html" class="btn btn-neutral float-left" title="Platform Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Flounder Zipline-Sharadar Interface" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

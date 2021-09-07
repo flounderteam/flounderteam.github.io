@@ -7,8 +7,9 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Platform Overview &mdash; fsharadar 0.2.0 documentation</title>
+  <title>Release Notes &mdash; fsharadar 0.3.0 documentation</title>
   
+
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -43,8 +44,8 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="install.html" />
-    <link rel="prev" title="Flounder Zipline-Sharadar Interface" href="index.html" /> 
+    <link rel="next" title="Contact Us" href="contactus.html" />
+    <link rel="prev" title="Examples" href="examples.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -68,7 +69,7 @@
             
             
               <div class="version">
-                0.2.0
+                0.3.0
               </div>
             
           
@@ -94,13 +95,15 @@
             
             
               <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Platform Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ingest.html">Ingesting Sharadar Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="building.html">Building Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running.html">Running Pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="release-history.html">Release History</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#release-0-3-0">Release 0.3.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#release-0-2-0">Release 0.2.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#release-0-1-0">Release 0.1.0</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="contactus.html">Contact Us</a></li>
 </ul>
 
@@ -150,13 +153,13 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Platform Overview</li>
+      <li>Release Notes</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/intro.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/releases.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -169,24 +172,44 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="platform-overview">
-<h1>Platform Overview<a class="headerlink" href="#platform-overview" title="Permalink to this headline">¶</a></h1>
-<p>The Zipline-based research platform is built around the Pipeline framework
-enabling to connect multiple data sources with multiple analytical
-approaches for conducting diverse backtest studies. The figure provides
-a conceptual outline of its architecture.</p>
-<a class="reference internal image-reference" href="_images/platform.png"><img alt="_images/platform.png" src="_images/platform.png" style="width: 650px;" /></a>
-<p>Within this framework, the Pipeline is a custom collection of cross-sectional
-trailing-window tasks (Factors, Classifiers, and Filters) propagated by Pipeline
-Engine through the backtest interval. From the user perspective, the task
-can be implemented as a specialization of the CustomFactor class with
-the user-defined method <em>compute()</em>.</p>
-<p>The Zipline data layer is organized as a collection of named data bundles
-associated with different data sets. The FSharadar extension implements
-two bundles produced from Sharadar Equity Prices (SEP),
-Daily Metrics of Core US Fundamental Data, and asset medatada (e.g. name,
-type, cusip, etc.) The Pipeline Engine processes the pipeline tasks by
-accessing the related data bundles with the corresponding Pipeline Loaders.</p>
+  <div class="section" id="release-notes">
+<h1>Release Notes<a class="headerlink" href="#release-notes" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="release-0-3-0">
+<h2>Release 0.3.0<a class="headerlink" href="#release-0-3-0" title="Permalink to this headline">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Release</dt>
+<dd class="field-odd"><p>0.3.0</p>
+</dd>
+<dt class="field-even">Date</dt>
+<dd class="field-even"><p>September 7, 2021</p>
+</dd>
+</dl>
+<p>Support of the Sharadar SFP data set</p>
+</div>
+<div class="section" id="release-0-2-0">
+<h2>Release 0.2.0<a class="headerlink" href="#release-0-2-0" title="Permalink to this headline">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Release</dt>
+<dd class="field-odd"><p>0.2.0</p>
+</dd>
+<dt class="field-even">Date</dt>
+<dd class="field-even"><p>July 1, 2021</p>
+</dd>
+</dl>
+<p>Support of the new version of the SHARADAR_SEP_2_&lt;&gt;.csv file.</p>
+</div>
+<div class="section" id="release-0-1-0">
+<h2>Release 0.1.0<a class="headerlink" href="#release-0-1-0" title="Permalink to this headline">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Release</dt>
+<dd class="field-odd"><p>0.1.0</p>
+</dd>
+<dt class="field-even">Date</dt>
+<dd class="field-even"><p>June 6, 2021</p>
+</dd>
+</dl>
+<p>Initial release with the support of the Sharadar SEP and Daily data sets</p>
+</div>
 </div>
 
 
@@ -195,8 +218,8 @@ accessing the related data bundles with the corresponding Pipeline Loaders.</p>
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="install.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="index.html" class="btn btn-neutral float-left" title="Flounder Zipline-Sharadar Interface" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="contactus.html" class="btn btn-neutral float-right" title="Contact Us" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="examples.html" class="btn btn-neutral float-left" title="Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
